@@ -1,0 +1,14 @@
+.centeredState {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    height: 100%;
+    padding: 16px;
+    box-sizing: border-box;
+}
+
+.noticeWrap {
+    max-width: 480px;
+    width: 100%;
+}

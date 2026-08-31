@@ -1,0 +1,12 @@
+# DHIS2 Platform
+node_modules
+.d2
+build
+**/src/locales
+i18n
+
+# Misc
+*.log
+.DS_Store
+.turbo
+.playwright-mcp

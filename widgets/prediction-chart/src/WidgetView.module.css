@@ -1,0 +1,9 @@
+.view {
+    padding: 8px 12px 12px;
+}
+
+.subtitle {
+    font-size: 13px;
+    color: var(--colors-grey700);
+    margin-bottom: 4px;
+}

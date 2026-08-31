@@ -1,0 +1,19 @@
+# These hoists are needed for @dhis2/app-shell since it directly uses some
+# libraries that were hoisted by yarn 1 (same setup as chap-frontend).
+publicHoistPattern:
+    - '@dhis2/*'
+    - 'typeface-roboto'
+    - 'prop-types'
+    - 'post-robot'
+    - 'styled-jsx'
+
+packages:
+    - packages/*
+    - widgets/*
+
+onlyBuiltDependencies:
+    - '@dhis2/cli-helpers-engine'
+    - '@dhis2/cli-style'
+    - core-js
+    - core-js-pure
+    - esbuild

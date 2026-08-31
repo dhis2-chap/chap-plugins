@@ -1,0 +1,27 @@
+{
+    "name": "chap-widgets",
+    "version": "1.0.0",
+    "description": "Playground monorepo of DHIS2 dashboard plugins (widgets) for CHAP",
+    "license": "BSD-3-Clause",
+    "private": true,
+    "packageManager": "pnpm@10.29.3",
+    "scripts": {
+        "new-widget": "node scripts/new-widget.mjs",
+        "build": "pnpm --recursive --filter './widgets/**' run build",
+        "lint": "eslint . && prettier -c .",
+        "format": "prettier . -w",
+        "tsc:check": "pnpm --recursive run tsc:check",
+        "verify": "pnpm run tsc:check && pnpm run lint && pnpm run build",
+        "deploy:local": "node scripts/deploy.mjs local",
+        "deploy:demo": "node scripts/deploy.mjs demo",
+        "regen-api": "node scripts/regen-api.mjs"
+    },
+    "devDependencies": {
+        "@dhis2/config-eslint": "^0.2.2",
+        "@dhis2/config-prettier": "^0.2.2",
+        "@eslint/compat": "^2.0.0",
+        "eslint": "^9.39.2",
+        "prettier": "^3.7.4",
+        "typescript": "^5.9.3"
+    }
+}

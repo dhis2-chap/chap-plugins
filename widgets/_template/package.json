@@ -1,0 +1,33 @@
+{
+    "name": "@chap-widgets/template",
+    "version": "1.0.0",
+    "description": "Template widget — copied by `pnpm new-widget <name>`",
+    "license": "BSD-3-Clause",
+    "private": true,
+    "scripts": {
+        "build": "d2-app-scripts build",
+        "start": "d2-app-scripts start",
+        "deploy": "d2-app-scripts deploy",
+        "tsc:check": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@chap-widgets/shared": "workspace:*",
+        "@dhis2/app-runtime": "^3.14.6",
+        "@dhis2/d2-i18n": "^1.2.0",
+        "@dhis2/ui": "^10.13.0",
+        "@tanstack/react-query": "^4.36.1",
+        "highcharts": "11.4.8",
+        "highcharts-react-official": "^3.2.1",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1",
+        "zod": "^3.23.8"
+    },
+    "devDependencies": {
+        "@dhis2/cli-app-scripts": "12.11.1",
+        "@types/node": "^22.18.0",
+        "@types/react": "^18.3.12",
+        "@types/react-dom": "^18.3.1",
+        "typescript": "^5.9.3",
+        "vite": "^5.4.21"
+    }
+}

@@ -1,0 +1,9 @@
+.view {
+    padding: 8px 12px 12px;
+}
+
+.footer {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--colors-grey700);
+}

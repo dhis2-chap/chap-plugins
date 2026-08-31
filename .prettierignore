@@ -1,0 +1,9 @@
+node_modules
+build
+.d2
+**/src/locales
+i18n
+pnpm-lock.yaml
+packages/shared/src/chap-api
+scripts/chap-api-request.ts
+.playwright-mcp
