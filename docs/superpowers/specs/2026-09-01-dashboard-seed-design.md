@@ -147,3 +147,6 @@ localhost:8090:
   seeded from `dashboard.seed.json` with the same item ids (configs saved
   there are the real configs), and writes drag/resize results back into the
   seed file via a small Vite dev-middleware endpoint.
+- **No cleanup on removal**: removing an item from the seed leaves its
+  `dataStore/chap-widgets/<id>` entry behind on instances it was pushed to
+  (no cleanup yet).

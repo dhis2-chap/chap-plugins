@@ -17,6 +17,7 @@ packages/shared/        @chap-widgets/shared — source-only, bundled into each 
 widgets/_template/      The widget blueprint — `pnpm new-widget <name>` copies it
 widgets/<name>/         One dashboard widget each; see the WIDGET CONTRACT in its README.md
 scripts/                new-widget.mjs, deploy.mjs, seed.mjs, regen-api.mjs
+  lib/                  Shared script logic — target resolution, widget discovery, seed-core — unit-tested (pnpm test)
 dashboard.seed.json     Source of truth for the seed-owned "CHAP Widgets" dashboard (layout + per-item config, stable item UIDs)
 ```
 
@@ -24,7 +25,7 @@ dashboard.seed.json     Source of truth for the seed-owned "CHAP Widgets" dashbo
 
 ```sh
 pnpm new-widget <name>              # scaffold widgets/<name> from _template
-pnpm verify                         # typecheck + lint + build everything — run before claiming success
+pnpm verify                         # typecheck + lint + test + build everything — run before claiming success
 pnpm --filter @chap-widgets/<name> start   # dev server for one widget
 pnpm deploy:local [name…]           # build + install on http://localhost:8090 (admin/district)
 pnpm deploy:demo  [name…]           # build + install on $DHIS2_DEMO_URL ($D2_USERNAME/$D2_PASSWORD)
