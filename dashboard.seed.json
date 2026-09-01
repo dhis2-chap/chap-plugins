@@ -24,7 +24,11 @@
                 "w": 20,
                 "h": 20
             },
-            "config": null
+            "config": {
+                "widget": "chap-widget-model-status",
+                "version": 1,
+                "jobLimit": 10
+            }
         },
         {
             "id": "yTDfwg1kc04",
