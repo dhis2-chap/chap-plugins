@@ -106,3 +106,63 @@ export const validateSeed = (seed) => {
         }
     })
 }
+
+/**
+ * Append any widget missing from the seed on rows below the existing items,
+ * DEFAULT_ITEM_SIZE each, three per row, config null (renders as "not
+ * configured"). This is how new widgets automatically join the dashboard.
+ */
+export const autoAddWidgets = (seed, allWidgets) => {
+    const present = new Set(seed.items.map((item) => item.widget))
+    const missing = allWidgets.filter((widget) => !present.has(widget)).sort()
+    if (missing.length === 0) {
+        return { seed, added: [] }
+    }
+    const { w, h } = DEFAULT_ITEM_SIZE
+    const perRow = Math.floor(GRID_COLUMNS / w)
+    const nextY = seed.items.reduce(
+        (max, item) => Math.max(max, item.layout.y + item.layout.h),
+        0
+    )
+    const addedItems = missing.map((widget, index) => ({
+        id: generateUid(),
+        widget,
+        layout: {
+            x: (index % perRow) * w,
+            y: nextY + Math.floor(index / perRow) * h,
+            w,
+            h,
+        },
+        config: null,
+    }))
+    return {
+        seed: { ...seed, items: [...seed.items, ...addedItems] },
+        added: missing,
+    }
+}
+
+export const sortItems = (items) =>
+    [...items].sort(
+        (a, b) =>
+            a.layout.y - b.layout.y ||
+            a.layout.x - b.layout.x ||
+            a.widget.localeCompare(b.widget)
+    )
+
+export const buildDashboardItems = (seed) =>
+    seed.items.map((item) => ({
+        id: item.id,
+        type: 'APP',
+        appKey: widgetAppKey(item.widget),
+        x: item.layout.x,
+        y: item.layout.y,
+        w: item.layout.w,
+        h: item.layout.h,
+    }))
+
+export const serializeSeed = (seed) =>
+    `${JSON.stringify(
+        { dashboard: seed.dashboard, items: sortItems(seed.items) },
+        null,
+        4
+    )}\n`

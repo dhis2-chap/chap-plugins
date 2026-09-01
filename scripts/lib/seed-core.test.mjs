@@ -3,7 +3,11 @@ import { test } from 'node:test'
 import {
     UID_RE,
     appKeyToWidget,
+    autoAddWidgets,
+    buildDashboardItems,
     generateUid,
+    serializeSeed,
+    sortItems,
     validateSeed,
     widgetAppKey,
 } from './seed-core.mjs'
@@ -81,4 +85,71 @@ test('validateSeed rejects bad shapes with pointed messages', () => {
     const arrayConfig = validSeed()
     arrayConfig.items[0].config = []
     assert.throws(() => validateSeed(arrayConfig), /config/)
+})
+
+test('autoAddWidgets appends missing widgets below existing items, 3 per row', () => {
+    const seed = validSeed() // items end at y+h = 24
+    const { seed: next, added } = autoAddWidgets(seed, [
+        'prediction-chart',
+        'model-status',
+        'outbreak-alerts',
+        'evaluation-compare',
+        'a-fourth-widget',
+        'z-fifth-widget',
+    ])
+    assert.deepEqual(added, [
+        'a-fourth-widget',
+        'evaluation-compare',
+        'outbreak-alerts',
+        'z-fifth-widget',
+    ])
+    const layouts = next.items
+        .slice(2)
+        .map((item) => [item.widget, item.layout])
+    assert.deepEqual(layouts, [
+        ['a-fourth-widget', { x: 0, y: 24, w: 20, h: 20 }],
+        ['evaluation-compare', { x: 20, y: 24, w: 20, h: 20 }],
+        ['outbreak-alerts', { x: 40, y: 24, w: 20, h: 20 }],
+        ['z-fifth-widget', { x: 0, y: 44, w: 20, h: 20 }],
+    ])
+    for (const item of next.items.slice(2)) {
+        assert.match(item.id, UID_RE)
+        assert.equal(item.config, null)
+    }
+    validateSeed(next)
+})
+
+test('autoAddWidgets is a no-op when every widget is present', () => {
+    const seed = validSeed()
+    const { seed: next, added } = autoAddWidgets(seed, [
+        'prediction-chart',
+        'model-status',
+    ])
+    assert.equal(next, seed)
+    assert.deepEqual(added, [])
+})
+
+test('buildDashboardItems maps seed items to APP dashboard items', () => {
+    assert.deepEqual(buildDashboardItems(validSeed())[0], {
+        id: 'a1234567890',
+        type: 'APP',
+        appKey: 'chap-widget-prediction-chart',
+        x: 0,
+        y: 0,
+        w: 29,
+        h: 24,
+    })
+})
+
+test('serializeSeed sorts items by y, x and ends with a newline', () => {
+    const seed = validSeed()
+    seed.items.reverse()
+    const output = serializeSeed(seed)
+    assert.ok(output.endsWith('}\n'))
+    const parsed = JSON.parse(output)
+    assert.deepEqual(
+        parsed.items.map((item) => item.widget),
+        ['prediction-chart', 'model-status']
+    )
+    assert.deepEqual(sortItems(seed.items), parsed.items)
 })
