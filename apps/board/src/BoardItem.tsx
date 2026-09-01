@@ -5,6 +5,39 @@ import { type SeedItem } from './boardApi'
 import styles from './BoardItem.module.css'
 import { pluginComponents } from './plugins'
 
+/**
+ * Contains a crash in one widget's Plugin (a failed dynamic import, or a
+ * render-time exception) to this one board item, instead of letting it
+ * propagate to the app-adapter's top-level ErrorBoundary and take down all
+ * four items. Keyed by `mode` from the parent so toggling View/Edit remounts
+ * this boundary and gives the plugin a fresh chance.
+ */
+class PluginErrorBoundary extends React.Component<
+    { widgetName: string; children: React.ReactNode },
+    { hasError: boolean }
+> {
+    state = { hasError: false }
+
+    static getDerivedStateFromError() {
+        return { hasError: true }
+    }
+
+    componentDidCatch(error: unknown) {
+        console.error(`board: "${this.props.widgetName}" Plugin crashed`, error)
+    }
+
+    render() {
+        if (this.state.hasError) {
+            return (
+                <p className={styles.placeholder}>
+                    “{this.props.widgetName}” crashed — see the browser console.
+                </p>
+            )
+        }
+        return this.props.children
+    }
+}
+
 export const BoardItem = ({ item }: { item: SeedItem }) => {
     const [mode, setMode] = useState<'view' | 'edit'>('view')
     const [title, setTitle] = useState<string | null>(null)
@@ -39,20 +72,24 @@ export const BoardItem = ({ item }: { item: SeedItem }) => {
             </div>
             <div className={styles.body}>
                 {Plugin ? (
-                    <Suspense
-                        fallback={
-                            <p className={styles.placeholder}>
-                                Loading {item.widget}…
-                            </p>
-                        }
-                    >
-                        <Plugin
-                            dashboardItemId={item.id}
-                            dashboardMode={mode}
-                            dashboardItemFilters={{}}
-                            setDashboardItemDetails={setDashboardItemDetails}
-                        />
-                    </Suspense>
+                    <PluginErrorBoundary key={mode} widgetName={item.widget}>
+                        <Suspense
+                            fallback={
+                                <p className={styles.placeholder}>
+                                    Loading {item.widget}…
+                                </p>
+                            }
+                        >
+                            <Plugin
+                                dashboardItemId={item.id}
+                                dashboardMode={mode}
+                                dashboardItemFilters={{}}
+                                setDashboardItemDetails={
+                                    setDashboardItemDetails
+                                }
+                            />
+                        </Suspense>
+                    </PluginErrorBoundary>
                 ) : (
                     <p className={styles.placeholder}>
                         No widget source for “{item.widget}” under widgets/.
