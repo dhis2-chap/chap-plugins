@@ -15,6 +15,9 @@
         "verify": "pnpm run tsc:check && pnpm run lint && pnpm run test && pnpm run build",
         "deploy:local": "node scripts/deploy.mjs local",
         "deploy:demo": "node scripts/deploy.mjs demo",
+        "seed:local": "node scripts/seed.mjs local",
+        "seed:demo": "node scripts/seed.mjs demo",
+        "seed:pull": "node scripts/seed.mjs --pull",
         "regen-api": "node scripts/regen-api.mjs"
     },
     "devDependencies": {

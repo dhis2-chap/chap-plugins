@@ -1,0 +1,52 @@
+{
+    "dashboard": {
+        "name": "CHAP Widgets",
+        "code": "CHAP_WIDGETS"
+    },
+    "items": [
+        {
+            "id": "pY1eUz7jXOH",
+            "widget": "evaluation-compare",
+            "layout": {
+                "x": 0,
+                "y": 0,
+                "w": 20,
+                "h": 20
+            },
+            "config": null
+        },
+        {
+            "id": "Y1T81JCnpaf",
+            "widget": "model-status",
+            "layout": {
+                "x": 20,
+                "y": 0,
+                "w": 20,
+                "h": 20
+            },
+            "config": null
+        },
+        {
+            "id": "yTDfwg1kc04",
+            "widget": "outbreak-alerts",
+            "layout": {
+                "x": 40,
+                "y": 0,
+                "w": 20,
+                "h": 20
+            },
+            "config": null
+        },
+        {
+            "id": "WyJvJQzt5wn",
+            "widget": "prediction-chart",
+            "layout": {
+                "x": 0,
+                "y": 20,
+                "w": 20,
+                "h": 20
+            },
+            "config": null
+        }
+    ]
+}
