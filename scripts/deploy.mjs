@@ -12,9 +12,10 @@
  * Pass --no-build to deploy existing build/bundle zips without rebuilding.
  */
 import { execFileSync } from 'node:child_process'
-import { existsSync, readdirSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { resolveTarget } from './lib/targets.mjs'
+import { discoverWidgets } from './lib/widgets.mjs'
 
 const repoRoot = path.resolve(
     path.dirname(fileURLToPath(import.meta.url)),
@@ -34,34 +35,14 @@ if (!target) {
     process.exit(1)
 }
 
-const resolveTarget = () => {
-    if (target === 'local') {
-        return {
-            url: process.env.DHIS2_LOCAL_URL ?? 'http://localhost:8090',
-            username: process.env.D2_USERNAME ?? 'admin',
-            password: process.env.D2_PASSWORD ?? 'district',
-        }
-    }
-    if (target === 'demo') {
-        const url = process.env.DHIS2_DEMO_URL
-        if (!url) {
-            console.error('deploy demo: DHIS2_DEMO_URL is not set')
-            process.exit(1)
-        }
-        return {
-            url,
-            username: process.env.D2_USERNAME,
-            password: process.env.D2_PASSWORD,
-        }
-    }
-    return {
-        url: target,
-        username: process.env.D2_USERNAME,
-        password: process.env.D2_PASSWORD,
-    }
+let resolved
+try {
+    resolved = resolveTarget(target)
+} catch (error) {
+    console.error(`deploy ${target}: ${error.message}`)
+    process.exit(1)
 }
-
-const { url, username, password } = resolveTarget()
+const { url, username, password } = resolved
 if (!username || !password) {
     console.error(
         'deploy: set D2_USERNAME and D2_PASSWORD for the target instance'
@@ -69,12 +50,7 @@ if (!username || !password) {
     process.exit(1)
 }
 
-const allWidgets = readdirSync(widgetsDir, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory() && entry.name !== '_template')
-    .filter((entry) =>
-        existsSync(path.join(widgetsDir, entry.name, 'd2.config.js'))
-    )
-    .map((entry) => entry.name)
+const allWidgets = discoverWidgets(widgetsDir)
 
 const widgets = requestedWidgets.length > 0 ? requestedWidgets : allWidgets
 const unknown = widgets.filter((name) => !allWidgets.includes(name))

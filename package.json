@@ -11,7 +11,8 @@
         "lint": "eslint . && prettier -c .",
         "format": "prettier . -w",
         "tsc:check": "pnpm --recursive run tsc:check",
-        "verify": "pnpm run tsc:check && pnpm run lint && pnpm run build",
+        "test": "node --test 'scripts/**/*.test.mjs'",
+        "verify": "pnpm run tsc:check && pnpm run lint && pnpm run test && pnpm run build",
         "deploy:local": "node scripts/deploy.mjs local",
         "deploy:demo": "node scripts/deploy.mjs demo",
         "regen-api": "node scripts/regen-api.mjs"
