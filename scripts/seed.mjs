@@ -19,6 +19,7 @@ import {
     DEFAULT_DASHBOARD,
     autoAddWidgets,
     buildDashboardItems,
+    mergePulledDashboard,
     serializeSeed,
     validateSeed,
 } from './lib/seed-core.mjs'
@@ -172,8 +173,48 @@ const push = async () => {
 }
 
 const pull = async () => {
-    console.error('seed: --pull is not implemented yet')
-    process.exit(1)
+    const seed = loadSeed()
+    const code = seed.dashboard?.code ?? DEFAULT_DASHBOARD.code
+    const data = await apiJson(
+        `dashboards.json?filter=code:eq:${code}&fields=id,name,code,dashboardItems[id,type,appKey,x,y,width,height]`
+    )
+    const dashboard = data.dashboards?.[0]
+    if (!dashboard) {
+        console.error(
+            `seed pull: no dashboard with code ${code} on ${url} — push first (pnpm seed:${target === 'local' ? 'local' : 'demo'})`
+        )
+        process.exit(1)
+    }
+
+    const configs = {}
+    for (const item of dashboard.dashboardItems ?? []) {
+        const response = await api(
+            `dataStore/${DATASTORE_NAMESPACE}/${item.id}`
+        )
+        if (response.ok) {
+            configs[item.id] = await response.json()
+        } else if (response.status !== 404) {
+            const text = await response.text()
+            throw new Error(
+                `GET dataStore/${DATASTORE_NAMESPACE}/${item.id} → ${response.status}: ${text.slice(0, 300)}`
+            )
+        }
+    }
+
+    const { seed: next, skipped } = mergePulledDashboard({
+        seed,
+        dashboard,
+        configs,
+        knownWidgets: discoverWidgets(widgetsDir),
+    })
+    validateSeed(next)
+    writeFileSync(seedPath, serializeSeed(next))
+    for (const label of skipped) {
+        console.warn(`▸ Skipped non-widget dashboard item: ${label}`)
+    }
+    console.log(
+        `✅ Pulled ${next.items.length} item(s) from "${dashboard.name}" (${url}) into dashboard.seed.json`
+    )
 }
 
 const main = pullMode ? pull : push
