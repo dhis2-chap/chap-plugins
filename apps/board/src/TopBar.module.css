@@ -1,0 +1,27 @@
+.bar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 8px 4px;
+}
+
+.name {
+    margin: 0;
+    font-size: 16px;
+}
+
+.status {
+    color: var(--colors-grey600);
+    font-size: 13px;
+}
+
+.failed {
+    color: var(--colors-red600);
+    font-size: 13px;
+}
+
+.warning {
+    color: var(--colors-yellow800);
+    font-size: 13px;
+}
