@@ -172,11 +172,14 @@ export const serializeSeed = (seed) =>
  * instance, configs from the datastore (missing → null). The live item's
  * DHIS2 `width`/`height` fields map to the seed's internal `w`/`h` layout
  * keys. Items that are not chap widgets are skipped and reported so the
- * seed stays widgets-only. The seed's code is preserved (it is the upsert
- * key); the live name is adopted.
+ * seed stays widgets-only. `code` is the dashboard code to keep (it is the
+ * upsert key, so it does not come from the live dashboard); the live name is
+ * adopted. Takes `code` directly rather than a whole seed object — pull must
+ * work even when the local seed file is missing or broken, so this function
+ * has no other dependency on it.
  */
 export const mergePulledDashboard = ({
-    seed,
+    code,
     dashboard,
     configs,
     knownWidgets,
@@ -198,10 +201,7 @@ export const mergePulledDashboard = ({
     }
     return {
         seed: {
-            dashboard: {
-                name: dashboard.name,
-                code: seed.dashboard.code,
-            },
+            dashboard: { name: dashboard.name, code },
             items: sortItems(items),
         },
         skipped,

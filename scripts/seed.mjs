@@ -35,6 +35,7 @@ const repoRoot = path.resolve(
     '..'
 )
 const seedPath = path.join(repoRoot, 'dashboard.seed.json')
+const seedFileName = path.basename(seedPath)
 const widgetsDir = path.join(repoRoot, 'widgets')
 
 const args = process.argv.slice(2)
@@ -81,11 +82,44 @@ const apiJson = async (pathname, options = {}) => {
     return response.json()
 }
 
+// Parse errors read like "dashboard.seed.json: invalid JSON — <reason>" so
+// they're identifiable regardless of which caller hit them.
+const parseSeedFile = (text) => {
+    try {
+        return JSON.parse(text)
+    } catch (error) {
+        throw new Error(`${seedFileName}: invalid JSON — ${error.message}`)
+    }
+}
+
+// Strict: the file must exist-and-be-valid, or be absent (bootstrap
+// default). Used by push, which is about to write real state from it.
 const loadSeed = () => {
     if (!existsSync(seedPath)) {
         return { dashboard: { ...DEFAULT_DASHBOARD }, items: [] }
     }
-    return JSON.parse(readFileSync(seedPath, 'utf8'))
+    const seed = parseSeedFile(readFileSync(seedPath, 'utf8'))
+    validateSeed(seed)
+    return seed
+}
+
+// Lenient: pull is the repair tool for a broken seed, so it must not refuse
+// to run just because the local file is missing, unparseable, or has no
+// usable dashboard.code — it falls back to the default code in every case.
+const readLocalDashboardCode = () => {
+    if (!existsSync(seedPath)) {
+        return DEFAULT_DASHBOARD.code
+    }
+    let seed
+    try {
+        seed = parseSeedFile(readFileSync(seedPath, 'utf8'))
+    } catch {
+        return DEFAULT_DASHBOARD.code
+    }
+    const code = seed?.dashboard?.code
+    return typeof code === 'string' && code.length > 0
+        ? code
+        : DEFAULT_DASHBOARD.code
 }
 
 const findDashboardId = async (code) => {
@@ -95,12 +129,20 @@ const findDashboardId = async (code) => {
     return data.dashboards?.[0]?.id ?? null
 }
 
-// POST creates the datastore key; on conflict (key exists) fall back to PUT.
+// POST creates the datastore key; on conflict (409, key already exists)
+// fall back to PUT. Any other non-ok status is a real failure — surface it
+// instead of masking it behind a PUT attempt.
 const upsertConfig = async (itemId, config) => {
     const resource = `dataStore/${DATASTORE_NAMESPACE}/${itemId}`
     const created = await api(resource, { method: 'POST', body: config })
     if (created.ok) {
         return
+    }
+    if (created.status !== 409) {
+        const text = await created.text()
+        throw new Error(
+            `POST /api/${resource} → ${created.status}: ${text.slice(0, 300)}`
+        )
     }
     const updated = await api(resource, { method: 'PUT', body: config })
     if (!updated.ok) {
@@ -173,8 +215,7 @@ const push = async () => {
 }
 
 const pull = async () => {
-    const seed = loadSeed()
-    const code = seed.dashboard?.code ?? DEFAULT_DASHBOARD.code
+    const code = readLocalDashboardCode()
     const data = await apiJson(
         `dashboards.json?filter=code:eq:${code}&fields=id,name,code,dashboardItems[id,type,appKey,x,y,width,height]`
     )
@@ -202,7 +243,7 @@ const pull = async () => {
     }
 
     const { seed: next, skipped } = mergePulledDashboard({
-        seed,
+        code,
         dashboard,
         configs,
         knownWidgets: discoverWidgets(widgetsDir),
@@ -219,6 +260,11 @@ const pull = async () => {
 
 const main = pullMode ? pull : push
 main().catch((error) => {
-    console.error(`seed: ${error.message}`)
+    let message = `seed: ${error.message}`
+    if (error.cause) {
+        const detail = error.cause.code ?? error.cause.message ?? error.cause
+        message += ` (${detail}, ${url})`
+    }
+    console.error(message)
     process.exit(1)
 })

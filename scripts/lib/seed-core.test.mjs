@@ -157,7 +157,7 @@ test('serializeSeed sorts items by y, x and ends with a newline', () => {
 
 test('mergePulledDashboard converts live items, keeps code, adopts live name', () => {
     const { seed, skipped } = mergePulledDashboard({
-        seed: validSeed(),
+        code: 'CHAP_WIDGETS',
         dashboard: {
             name: 'CHAP Widgets (renamed)',
             dashboardItems: [
@@ -212,4 +212,18 @@ test('mergePulledDashboard converts live items, keeps code, adopts live name', (
         },
     ])
     validateSeed(seed)
+})
+
+test('mergePulledDashboard takes a bare code string, not a seed object', () => {
+    const { seed, skipped } = mergePulledDashboard({
+        code: 'SOME_OTHER_CODE',
+        dashboard: { name: 'Fresh Dashboard', dashboardItems: [] },
+        configs: {},
+        knownWidgets: [],
+    })
+    assert.deepEqual(skipped, [])
+    assert.deepEqual(seed, {
+        dashboard: { name: 'Fresh Dashboard', code: 'SOME_OTHER_CODE' },
+        items: [],
+    })
 })
