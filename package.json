@@ -7,6 +7,7 @@
     "packageManager": "pnpm@10.29.3",
     "scripts": {
         "new-widget": "node scripts/new-widget.mjs",
+        "board": "pnpm --filter @chap-widgets/board start",
         "build": "pnpm --recursive --filter './widgets/**' run build",
         "lint": "eslint . && prettier -c .",
         "format": "prettier . -w",

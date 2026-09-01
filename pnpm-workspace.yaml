@@ -10,6 +10,7 @@ publicHoistPattern:
 packages:
     - packages/*
     - widgets/*
+    - apps/*
 
 onlyBuiltDependencies:
     - '@dhis2/cli-helpers-engine'
