@@ -28,6 +28,7 @@
 Extract target resolution and widget discovery out of `deploy.mjs` so `seed.mjs` (Tasks 5–6) can reuse them, and wire `node --test` into the repo's verify pipeline.
 
 **Files:**
+
 - Create: `scripts/lib/targets.mjs`
 - Create: `scripts/lib/widgets.mjs`
 - Test: `scripts/lib/targets.test.mjs`
@@ -35,10 +36,11 @@ Extract target resolution and widget discovery out of `deploy.mjs` so `seed.mjs`
 - Modify: `package.json` (add `test` script, extend `verify`)
 
 **Interfaces:**
+
 - Consumes: nothing (first task).
 - Produces:
-  - `resolveTarget(target: string, env = process.env) → { url, username, password }` — throws `Error` for `demo` without `DHIS2_DEMO_URL`; `username`/`password` may be `undefined` for `demo`/url targets (callers check).
-  - `discoverWidgets(widgetsDir: string) → string[]` — directory names under `widgets/` that contain a `d2.config.js`, excluding `_template`.
+    - `resolveTarget(target: string, env = process.env) → { url, username, password }` — throws `Error` for `demo` without `DHIS2_DEMO_URL`; `username`/`password` may be `undefined` for `demo`/url targets (callers check).
+    - `discoverWidgets(widgetsDir: string) → string[]` — directory names under `widgets/` that contain a `d2.config.js`, excluding `_template`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -164,6 +166,7 @@ Expected: 5 passing tests.
 - [ ] **Step 5: Refactor `deploy.mjs` to use the lib (behavior unchanged)**
 
 In `scripts/deploy.mjs`:
+
 - Add imports after the existing ones:
 
 ```js
@@ -221,17 +224,19 @@ git commit -m "Extract shared script lib (target resolution, widget discovery) a
 ### Task 2: seed-core — UIDs, app-key mapping, seed validation
 
 **Files:**
+
 - Create: `scripts/lib/seed-core.mjs`
 - Test: `scripts/lib/seed-core.test.mjs`
 
 **Interfaces:**
+
 - Consumes: nothing.
 - Produces (all named exports of `scripts/lib/seed-core.mjs`):
-  - `GRID_COLUMNS = 60`, `DEFAULT_ITEM_SIZE = { w: 20, h: 20 }`, `DEFAULT_DASHBOARD = { name: 'CHAP Widgets', code: 'CHAP_WIDGETS' }`, `UID_RE`
-  - `generateUid() → string` (valid DHIS2 UID)
-  - `widgetAppKey(widget: string) → string` (`chap-widget-<name>`)
-  - `appKeyToWidget(appKey: string|undefined) → string|null`
-  - `validateSeed(seed) → void` — throws `Error` starting with `dashboard.seed.json:` on any violation.
+    - `GRID_COLUMNS = 60`, `DEFAULT_ITEM_SIZE = { w: 20, h: 20 }`, `DEFAULT_DASHBOARD = { name: 'CHAP Widgets', code: 'CHAP_WIDGETS' }`, `UID_RE`
+    - `generateUid() → string` (valid DHIS2 UID)
+    - `widgetAppKey(widget: string) → string` (`chap-widget-<name>`)
+    - `appKeyToWidget(appKey: string|undefined) → string|null`
+    - `validateSeed(seed) → void` — throws `Error` starting with `dashboard.seed.json:` on any violation.
 - Seed shape (used by every later task): `{ dashboard: { name, code }, items: [{ id, widget, layout: { x, y, w, h }, config: object|null }] }`.
 
 - [ ] **Step 1: Write the failing tests**
@@ -268,9 +273,7 @@ const validSeed = () => ({
 })
 
 test('generateUid produces distinct valid DHIS2 UIDs', () => {
-    const uids = new Set(
-        Array.from({ length: 100 }, () => generateUid())
-    )
+    const uids = new Set(Array.from({ length: 100 }, () => generateUid()))
     assert.equal(uids.size, 100)
     for (const uid of uids) {
         assert.match(uid, UID_RE)
@@ -278,8 +281,14 @@ test('generateUid produces distinct valid DHIS2 UIDs', () => {
 })
 
 test('widgetAppKey and appKeyToWidget round-trip', () => {
-    assert.equal(widgetAppKey('prediction-chart'), 'chap-widget-prediction-chart')
-    assert.equal(appKeyToWidget('chap-widget-prediction-chart'), 'prediction-chart')
+    assert.equal(
+        widgetAppKey('prediction-chart'),
+        'chap-widget-prediction-chart'
+    )
+    assert.equal(
+        appKeyToWidget('chap-widget-prediction-chart'),
+        'prediction-chart'
+    )
     assert.equal(appKeyToWidget('line-listing'), null)
     assert.equal(appKeyToWidget(undefined), null)
 })
@@ -348,8 +357,7 @@ export const DEFAULT_DASHBOARD = { name: 'CHAP Widgets', code: 'CHAP_WIDGETS' }
 
 export const UID_RE = /^[A-Za-z][A-Za-z0-9]{10}$/
 
-const UID_LETTERS =
-    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+const UID_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 const UID_CHARS = `${UID_LETTERS}0123456789`
 
 export const generateUid = () => {
@@ -420,7 +428,11 @@ export const validateSeed = (seed) => {
                 fail(`${at}.layout.${key} must be an integer`)
             }
         }
-        if (layout.x < 0 || layout.w < 1 || layout.x + layout.w > GRID_COLUMNS) {
+        if (
+            layout.x < 0 ||
+            layout.w < 1 ||
+            layout.x + layout.w > GRID_COLUMNS
+        ) {
             fail(`${at}.layout must fit the ${GRID_COLUMNS}-column grid`)
         }
         if (layout.y < 0 || layout.h < 1) {
@@ -453,16 +465,18 @@ git commit -m "Add seed-core: UID generation, app-key mapping, seed validation"
 ### Task 3: seed-core — auto-add, dashboard payload items, stable serialization
 
 **Files:**
+
 - Modify: `scripts/lib/seed-core.mjs` (append functions)
 - Test: `scripts/lib/seed-core.test.mjs` (append tests)
 
 **Interfaces:**
+
 - Consumes: `generateUid`, `widgetAppKey`, `GRID_COLUMNS`, `DEFAULT_ITEM_SIZE` from Task 2.
 - Produces:
-  - `autoAddWidgets(seed, allWidgets: string[]) → { seed, added: string[] }` — appends missing widgets (alphabetical), 3-per-row below existing items, `config: null`; returns the input seed untouched when nothing is missing.
-  - `sortItems(items) → items` — new array sorted by `(layout.y, layout.x, widget)`.
-  - `buildDashboardItems(seed) → [{ id, type: 'APP', appKey, x, y, w, h }]`
-  - `serializeSeed(seed) → string` — sorted items, 4-space-indented JSON, trailing newline (prettier-clean).
+    - `autoAddWidgets(seed, allWidgets: string[]) → { seed, added: string[] }` — appends missing widgets (alphabetical), 3-per-row below existing items, `config: null`; returns the input seed untouched when nothing is missing.
+    - `sortItems(items) → items` — new array sorted by `(layout.y, layout.x, widget)`.
+    - `buildDashboardItems(seed) → [{ id, type: 'APP', appKey, x, y, w, h }]`
+    - `serializeSeed(seed) → string` — sorted items, 4-space-indented JSON, trailing newline (prettier-clean).
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -552,9 +566,7 @@ Expected: FAIL — `autoAddWidgets` (etc.) is not exported.
  */
 export const autoAddWidgets = (seed, allWidgets) => {
     const present = new Set(seed.items.map((item) => item.widget))
-    const missing = allWidgets
-        .filter((widget) => !present.has(widget))
-        .sort()
+    const missing = allWidgets.filter((widget) => !present.has(widget)).sort()
     if (missing.length === 0) {
         return { seed, added: [] }
     }
@@ -625,13 +637,15 @@ git commit -m "Add seed-core auto-add placement, dashboard item mapping, stable 
 ### Task 4: seed-core — merge a pulled live dashboard into a seed
 
 **Files:**
+
 - Modify: `scripts/lib/seed-core.mjs` (append one function)
 - Test: `scripts/lib/seed-core.test.mjs` (append tests)
 
 **Interfaces:**
+
 - Consumes: `appKeyToWidget`, `sortItems` from Tasks 2–3.
 - Produces:
-  - `mergePulledDashboard({ seed, dashboard, configs, knownWidgets }) → { seed, skipped: string[] }` where `dashboard` is the live API object (`{ name, dashboardItems: [{ id, type, appKey, x, y, w, h }] }`), `configs` maps item id → stored config object, `knownWidgets` is `discoverWidgets()` output. Live name is adopted; `seed.dashboard.code` is kept (it is the lookup key); non-widget items are skipped and reported.
+    - `mergePulledDashboard({ seed, dashboard, configs, knownWidgets }) → { seed, skipped: string[] }` where `dashboard` is the live API object (`{ name, dashboardItems: [{ id, type, appKey, x, y, w, h }] }`), `configs` maps item id → stored config object, `knownWidgets` is `discoverWidgets()` output. Live name is adopted; `seed.dashboard.code` is kept (it is the lookup key); non-widget items are skipped and reported.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -765,10 +779,12 @@ git commit -m "Add seed-core merge of pulled live dashboards"
 The CLI and DHIS2 API layer. After this task `pnpm seed:local` works end to end (create/update dashboard + write configs), bootstrapping `dashboard.seed.json` on first run.
 
 **Files:**
+
 - Create: `scripts/seed.mjs`
 - Modify: `package.json` (three scripts)
 
 **Interfaces:**
+
 - Consumes: everything produced by Tasks 1–4 (`resolveTarget`, `discoverWidgets`, seed-core exports).
 - Produces: CLI `node scripts/seed.mjs [local|demo|url] [--pull]` (pull wired in Task 6 — this task exits with a "pull not implemented yet" error for `--pull`); pnpm scripts `seed:local`, `seed:demo`, `seed:pull`; the repo-root file `dashboard.seed.json` (created on first push).
 
@@ -826,7 +842,9 @@ try {
 }
 const { url, username, password } = resolved
 if (!username || !password) {
-    console.error('seed: set D2_USERNAME and D2_PASSWORD for the target instance')
+    console.error(
+        'seed: set D2_USERNAME and D2_PASSWORD for the target instance'
+    )
     process.exit(1)
 }
 
@@ -837,7 +855,9 @@ const api = (pathname, { method = 'GET', body } = {}) =>
             Authorization: `Basic ${Buffer.from(
                 `${username}:${password}`
             ).toString('base64')}`,
-            ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+            ...(body !== undefined
+                ? { 'Content-Type': 'application/json' }
+                : {}),
         },
         body: body !== undefined ? JSON.stringify(body) : undefined,
     })
@@ -877,7 +897,9 @@ const upsertConfig = async (itemId, config) => {
     const updated = await api(resource, { method: 'PUT', body: config })
     if (!updated.ok) {
         const text = await updated.text()
-        throw new Error(`PUT /api/${resource} → ${updated.status}: ${text.slice(0, 300)}`)
+        throw new Error(
+            `PUT /api/${resource} → ${updated.status}: ${text.slice(0, 300)}`
+        )
     }
 }
 
@@ -904,7 +926,9 @@ const push = async () => {
             method: 'PUT',
             body: { ...payload, id: existingId },
         })
-        console.log(`▸ Updated dashboard "${seed.dashboard.name}" (${existingId}) on ${url}`)
+        console.log(
+            `▸ Updated dashboard "${seed.dashboard.name}" (${existingId}) on ${url}`
+        )
     } else {
         await apiJson('dashboards', { method: 'POST', body: payload })
         console.log(`▸ Created dashboard "${seed.dashboard.name}" on ${url}`)
@@ -913,19 +937,27 @@ const push = async () => {
     const results = []
     for (const item of seed.items) {
         if (item.config === null) {
-            results.push({ widget: item.widget, status: 'no config (renders as unconfigured)' })
+            results.push({
+                widget: item.widget,
+                status: 'no config (renders as unconfigured)',
+            })
             continue
         }
         try {
             await upsertConfig(item.id, item.config)
             results.push({ widget: item.widget, status: 'config written' })
         } catch (error) {
-            results.push({ widget: item.widget, status: `FAILED: ${error.message}` })
+            results.push({
+                widget: item.widget,
+                status: `FAILED: ${error.message}`,
+            })
         }
     }
     console.log('\nSeed summary:')
     for (const { widget, status } of results) {
-        console.log(`  ${status.startsWith('FAILED') ? '❌' : '✅'} ${widget} — ${status}`)
+        console.log(
+            `  ${status.startsWith('FAILED') ? '❌' : '✅'} ${widget} — ${status}`
+        )
     }
     if (results.some(({ status }) => status.startsWith('FAILED'))) {
         process.exit(1)
@@ -997,9 +1029,11 @@ git commit -m "Add seed script push mode: upsert CHAP Widgets dashboard + item c
 ### Task 6: pull mode
 
 **Files:**
+
 - Modify: `scripts/seed.mjs` (replace the `pull` stub)
 
 **Interfaces:**
+
 - Consumes: `mergePulledDashboard`, `serializeSeed`, `validateSeed`, `DEFAULT_DASHBOARD` (already imported or added to the seed-core import), plus `api`/`apiJson`/`loadSeed` from Task 5.
 - Produces: working `pnpm seed:pull [local|demo|url]` that rewrites `dashboard.seed.json` from the live dashboard.
 
@@ -1024,7 +1058,9 @@ const pull = async () => {
 
     const configs = {}
     for (const item of dashboard.dashboardItems ?? []) {
-        const response = await api(`dataStore/${DATASTORE_NAMESPACE}/${item.id}`)
+        const response = await api(
+            `dataStore/${DATASTORE_NAMESPACE}/${item.id}`
+        )
         if (response.ok) {
             configs[item.id] = await response.json()
         } else if (response.status !== 404) {
@@ -1096,11 +1132,13 @@ git commit -m "Add seed pull mode: capture live dashboard layout and configs int
 ### Task 7: CI step + documentation
 
 **Files:**
+
 - Modify: `.github/workflows/ci.yml` (one step in the deploy-demo job)
 - Modify: `CLAUDE.md` (commands + repo map + rules)
 - Modify: `README.md` (mention the seed workflow where dashboards/deploys are described)
 
 **Interfaces:**
+
 - Consumes: `pnpm seed:demo` from Task 5.
 - Produces: demo dashboard refreshed on every push to main; docs of record updated.
 
@@ -1109,13 +1147,13 @@ git commit -m "Add seed pull mode: capture live dashboard layout and configs int
 In `.github/workflows/ci.yml`, deploy-demo job, insert between the "Deploy all widgets to the demo instance" step and the "Demo deploy skipped" step:
 
 ```yaml
-            - name: Seed the demo dashboard
-              if: vars.DHIS2_DEMO_URL != ''
-              env:
-                  DHIS2_DEMO_URL: ${{ vars.DHIS2_DEMO_URL }}
-                  D2_USERNAME: ${{ secrets.DHIS2_DEMO_USERNAME }}
-                  D2_PASSWORD: ${{ secrets.DHIS2_DEMO_PASSWORD }}
-              run: pnpm seed:demo
+- name: Seed the demo dashboard
+  if: vars.DHIS2_DEMO_URL != ''
+  env:
+      DHIS2_DEMO_URL: ${{ vars.DHIS2_DEMO_URL }}
+      D2_USERNAME: ${{ secrets.DHIS2_DEMO_USERNAME }}
+      D2_PASSWORD: ${{ secrets.DHIS2_DEMO_PASSWORD }}
+  run: pnpm seed:demo
 ```
 
 (Widgets must be installed before the dashboard references their app keys — hence after the deploy step.)
@@ -1157,9 +1195,11 @@ git commit -m "Seed the demo dashboard from CI and document the seed workflow"
 No new code — this executes the spec's acceptance checklist against localhost:8090 and leaves the repo with a real, configured seed committed.
 
 **Files:**
+
 - Modify: `dashboard.seed.json` (captured configs via pull)
 
 **Interfaces:**
+
 - Consumes: `pnpm seed:local`, `pnpm seed:pull` (Tasks 5–6).
 - Produces: a committed seed with at least one configured widget; verified convergence.
 
