@@ -3,6 +3,8 @@ import { test } from 'node:test'
 import {
     UID_RE,
     appKeyToWidget,
+    applyBoardLayout,
+    applyCapturedConfigs,
     autoAddWidgets,
     buildDashboardItems,
     generateUid,
@@ -226,4 +228,54 @@ test('mergePulledDashboard takes a bare code string, not a seed object', () => {
         dashboard: { name: 'Fresh Dashboard', code: 'SOME_OTHER_CODE' },
         items: [],
     })
+})
+
+test('applyBoardLayout applies layouts by item id', () => {
+    const result = applyBoardLayout(validSeed(), [
+        { id: 'a1234567890', x: 5, y: 10, w: 25, h: 12 },
+        { id: 'b1234567890', x: 30, y: 10, w: 20, h: 12 },
+    ])
+    assert.deepEqual(result.items[0].layout, { x: 5, y: 10, w: 25, h: 12 })
+    assert.deepEqual(result.items[1].layout, { x: 30, y: 10, w: 20, h: 12 })
+    assert.deepEqual(result.items[0].config, { version: 1 })
+})
+
+test('applyBoardLayout leaves unmentioned items unchanged', () => {
+    const result = applyBoardLayout(validSeed(), [
+        { id: 'b1234567890', x: 0, y: 40, w: 15, h: 8 },
+    ])
+    assert.deepEqual(result.items[0].layout, { x: 0, y: 0, w: 29, h: 24 })
+    assert.deepEqual(result.items[1].layout, { x: 0, y: 40, w: 15, h: 8 })
+})
+
+test('applyBoardLayout rejects unknown item ids', () => {
+    assert.throws(
+        () =>
+            applyBoardLayout(validSeed(), [
+                { id: 'Zzzzzzzzzz9', x: 0, y: 0, w: 10, h: 10 },
+            ]),
+        /unknown item id "Zzzzzzzzzz9"/
+    )
+})
+
+test('applyBoardLayout does not mutate its input', () => {
+    const seed = validSeed()
+    applyBoardLayout(seed, [{ id: 'a1234567890', x: 5, y: 5, w: 10, h: 10 }])
+    assert.deepEqual(seed, validSeed())
+})
+
+test('applyCapturedConfigs sets objects and keeps failed captures', () => {
+    const seed = validSeed()
+    seed.items[1].config = { version: 2 }
+    const result = applyCapturedConfigs(seed, {
+        a1234567890: { version: 9, jobLimit: 5 },
+        // b1234567890 absent → capture failed → previous config kept
+    })
+    assert.deepEqual(result.items[0].config, { version: 9, jobLimit: 5 })
+    assert.deepEqual(result.items[1].config, { version: 2 })
+})
+
+test('applyCapturedConfigs writes null for missing datastore entries', () => {
+    const result = applyCapturedConfigs(validSeed(), { a1234567890: null })
+    assert.equal(result.items[0].config, null)
 })

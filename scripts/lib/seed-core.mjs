@@ -207,3 +207,44 @@ export const mergePulledDashboard = ({
         skipped,
     }
 }
+
+/**
+ * Apply board drag/resize results to seed items. `layouts` entries are
+ * { id, x, y, w, h } in grid units; items not mentioned keep their layout.
+ * Unknown ids are an error — the board can only move existing items.
+ */
+export const applyBoardLayout = (seed, layouts) => {
+    const itemIds = new Set(seed.items.map((item) => item.id))
+    for (const layout of layouts) {
+        if (!itemIds.has(layout.id)) {
+            throw new Error(`board layout: unknown item id "${layout.id}"`)
+        }
+    }
+    const layoutById = new Map(layouts.map((layout) => [layout.id, layout]))
+    return {
+        ...seed,
+        items: seed.items.map((item) => {
+            const next = layoutById.get(item.id)
+            return next
+                ? {
+                      ...item,
+                      layout: { x: next.x, y: next.y, w: next.w, h: next.h },
+                  }
+                : item
+        }),
+    }
+}
+
+/**
+ * Merge configs captured from the datastore into the seed. `configs` maps
+ * item id → object (stored config), null (no datastore entry), or
+ * undefined/absent (capture failed — the previous seed config is kept).
+ */
+export const applyCapturedConfigs = (seed, configs) => ({
+    ...seed,
+    items: seed.items.map((item) =>
+        configs[item.id] === undefined
+            ? item
+            : { ...item, config: configs[item.id] }
+    ),
+})
