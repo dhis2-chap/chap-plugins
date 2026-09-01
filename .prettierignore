@@ -7,3 +7,4 @@ pnpm-lock.yaml
 packages/shared/src/chap-api
 scripts/chap-api-request.ts
 .playwright-mcp
+.superpowers

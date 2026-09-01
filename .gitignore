@@ -10,3 +10,5 @@ i18n
 .DS_Store
 .turbo
 .playwright-mcp
+
+.superpowers
