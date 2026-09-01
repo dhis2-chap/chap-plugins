@@ -1,7 +1,9 @@
 import path from 'node:path'
 import { defineConfig } from 'vite'
+import { boardSeedPlugin } from './vite-plugin-seed.mts'
 
 export default defineConfig({
+    plugins: [boardSeedPlugin()],
     server: {
         fs: {
             // Widget + shared sources are imported from across the workspace
