@@ -137,8 +137,8 @@ test('buildDashboardItems maps seed items to APP dashboard items', () => {
         appKey: 'chap-widget-prediction-chart',
         x: 0,
         y: 0,
-        w: 29,
-        h: 24,
+        width: 29,
+        height: 24,
     })
 })
 
@@ -167,8 +167,8 @@ test('mergePulledDashboard converts live items, keeps code, adopts live name', (
                     appKey: 'chap-widget-outbreak-alerts',
                     x: 0,
                     y: 10,
-                    w: 20,
-                    h: 20,
+                    width: 20,
+                    height: 20,
                 },
                 {
                     id: 'd1234567890',
@@ -176,8 +176,8 @@ test('mergePulledDashboard converts live items, keeps code, adopts live name', (
                     appKey: 'chap-widget-model-status',
                     x: 0,
                     y: 0,
-                    w: 20,
-                    h: 10,
+                    width: 20,
+                    height: 10,
                 },
                 { id: 'e1234567890', type: 'VISUALIZATION' },
                 {
@@ -186,8 +186,8 @@ test('mergePulledDashboard converts live items, keeps code, adopts live name', (
                     appKey: 'line-listing',
                     x: 20,
                     y: 0,
-                    w: 20,
-                    h: 10,
+                    width: 20,
+                    height: 10,
                 },
             ],
         },
