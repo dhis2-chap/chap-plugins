@@ -51,17 +51,27 @@ export const Board = ({
     const currentRef = useRef<ItemLayout[]>(toItemLayouts(gridLayout))
     const lastSavedRef = useRef(JSON.stringify(currentRef.current))
     const timerRef = useRef<number | undefined>(undefined)
+    const requestIdRef = useRef(0)
 
     const save = async (layouts: ItemLayout[]) => {
         window.clearTimeout(timerRef.current)
+        const requestId = ++requestIdRef.current
         setStatus('saving')
         try {
             const result = await saveLayouts(layouts)
+            if (requestId !== requestIdRef.current) {
+                // A newer save has started since this one was sent; a
+                // fresher response will decide the saved state instead.
+                return
+            }
             lastSavedRef.current = JSON.stringify(layouts)
             setWarnings(result.warnings)
             setStatus('saved')
         } catch (error) {
             console.error('board: saving the seed failed', error)
+            if (requestId !== requestIdRef.current) {
+                return
+            }
             setStatus('failed')
         }
     }

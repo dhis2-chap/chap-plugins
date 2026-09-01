@@ -32,7 +32,7 @@ export const TopBar = ({
                 ⚠ {warning}
             </span>
         ))}
-        <Button small onClick={onSync}>
+        <Button small onClick={onSync} disabled={status === 'saving'}>
             Sync seed
         </Button>
     </div>
