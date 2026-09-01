@@ -39,6 +39,11 @@ dashboard, run `pnpm seed:pull` to capture that back into
 `dashboard.seed.json`, then commit and push — the next CI run reproduces it
 on the demo instance.
 
+For layout work there's also a local board: `pnpm board` renders every
+widget on one drag/resize grid straight from source (no deploy needed) and
+autosaves the arrangement — plus each widget's live config — back into
+`dashboard.seed.json`.
+
 Widgets fetch data from chap-core through the instance's DHIS2 route
 (`/api/routes/chap/run`), which the CHAP Modeling App's settings create. If
 the route or backend is missing, widgets show a friendly notice instead.

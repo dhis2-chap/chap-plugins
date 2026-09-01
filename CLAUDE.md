@@ -16,6 +16,7 @@ packages/shared/        @chap-widgets/shared — source-only, bundled into each 
   src/dhis2/            useOrgUnitNames
 widgets/_template/      The widget blueprint — `pnpm new-widget <name>` copies it
 widgets/<name>/         One dashboard widget each; see the WIDGET CONTRACT in its README.md
+apps/board/             Dev-only board harness: every widget's Plugin on one react-grid-layout page; drag/resize + live configs autosave into dashboard.seed.json (never built/deployed)
 scripts/                new-widget.mjs, deploy.mjs, seed.mjs, regen-api.mjs
   lib/                  Shared script logic — target resolution, widget discovery, seed-core — unit-tested (pnpm test)
 dashboard.seed.json     Source of truth for the seed-owned "CHAP Widgets" dashboard (layout + per-item config, stable item UIDs)
@@ -25,6 +26,7 @@ dashboard.seed.json     Source of truth for the seed-owned "CHAP Widgets" dashbo
 
 ```sh
 pnpm new-widget <name>              # scaffold widgets/<name> from _template
+pnpm board                          # all-widgets board harness (localhost:3000) — layout + config edits autosave into dashboard.seed.json
 pnpm verify                         # typecheck + lint + test + build everything — run before claiming success
 pnpm --filter @chap-widgets/<name> start   # dev server for one widget
 pnpm deploy:local [name…]           # build + install on http://localhost:8090 (admin/district)
@@ -67,9 +69,9 @@ skipped with a notice until those are set).
    `pnpm seed:demo` overwrite the seed-owned "CHAP Widgets" dashboard (its
    layout and every item's datastore config) and nothing else — the "Test"
    dashboard (`OHOPHFFLD2N`) is never touched and stays a manual sandbox. To
-   change the layout: arrange/configure it on the real dashboard, then
-   `pnpm seed:pull` to capture it back into `dashboard.seed.json`, and
-   commit the diff.
+   change the layout: arrange/configure it on the real dashboard and
+   `pnpm seed:pull`, **or** use `pnpm board` (which autosaves layout and
+   captures live configs into the seed directly) — then commit the diff.
 
 ## Local dev loop
 
@@ -84,6 +86,11 @@ Widgets" dashboard (all widgets, laid out and configured) in one command.
 `pnpm --filter @chap-widgets/<name> start` serves the widget standalone with
 a mode-toggle harness — good for iterating on forms/views without deploying,
 but final verification happens on a real dashboard.
+
+`pnpm board` serves every widget's Plugin from source on one
+react-grid-layout page (item ids and configs shared with the real "CHAP
+Widgets" dashboard); drags/resizes and a "Sync seed" button write
+dashboard.seed.json directly — the fastest layout/config loop, no deploy.
 
 ## DHIS2/CHAP specifics worth knowing
 
