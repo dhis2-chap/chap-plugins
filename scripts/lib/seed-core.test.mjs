@@ -6,6 +6,7 @@ import {
     autoAddWidgets,
     buildDashboardItems,
     generateUid,
+    mergePulledDashboard,
     serializeSeed,
     sortItems,
     validateSeed,
@@ -152,4 +153,63 @@ test('serializeSeed sorts items by y, x and ends with a newline', () => {
         ['prediction-chart', 'model-status']
     )
     assert.deepEqual(sortItems(seed.items), parsed.items)
+})
+
+test('mergePulledDashboard converts live items, keeps code, adopts live name', () => {
+    const { seed, skipped } = mergePulledDashboard({
+        seed: validSeed(),
+        dashboard: {
+            name: 'CHAP Widgets (renamed)',
+            dashboardItems: [
+                {
+                    id: 'c1234567890',
+                    type: 'APP',
+                    appKey: 'chap-widget-outbreak-alerts',
+                    x: 0,
+                    y: 10,
+                    w: 20,
+                    h: 20,
+                },
+                {
+                    id: 'd1234567890',
+                    type: 'APP',
+                    appKey: 'chap-widget-model-status',
+                    x: 0,
+                    y: 0,
+                    w: 20,
+                    h: 10,
+                },
+                { id: 'e1234567890', type: 'VISUALIZATION' },
+                {
+                    id: 'f1234567890',
+                    type: 'APP',
+                    appKey: 'line-listing',
+                    x: 20,
+                    y: 0,
+                    w: 20,
+                    h: 10,
+                },
+            ],
+        },
+        configs: { d1234567890: { version: 1, jobLimit: 10 } },
+        knownWidgets: ['outbreak-alerts', 'model-status'],
+    })
+    assert.equal(seed.dashboard.name, 'CHAP Widgets (renamed)')
+    assert.equal(seed.dashboard.code, 'CHAP_WIDGETS')
+    assert.deepEqual(skipped, ['VISUALIZATION', 'line-listing'])
+    assert.deepEqual(seed.items, [
+        {
+            id: 'd1234567890',
+            widget: 'model-status',
+            layout: { x: 0, y: 0, w: 20, h: 10 },
+            config: { version: 1, jobLimit: 10 },
+        },
+        {
+            id: 'c1234567890',
+            widget: 'outbreak-alerts',
+            layout: { x: 0, y: 10, w: 20, h: 20 },
+            config: null,
+        },
+    ])
+    validateSeed(seed)
 })

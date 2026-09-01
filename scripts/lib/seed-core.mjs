@@ -166,3 +166,42 @@ export const serializeSeed = (seed) =>
         null,
         4
     )}\n`
+
+/**
+ * Rebuild the seed from a live dashboard: item ids and layout come from the
+ * instance, configs from the datastore (missing → null). Items that are not
+ * chap widgets are skipped and reported so the seed stays widgets-only. The
+ * seed's code is preserved (it is the upsert key); the live name is adopted.
+ */
+export const mergePulledDashboard = ({
+    seed,
+    dashboard,
+    configs,
+    knownWidgets,
+}) => {
+    const skipped = []
+    const items = []
+    for (const item of dashboard.dashboardItems ?? []) {
+        const widget = item.type === 'APP' ? appKeyToWidget(item.appKey) : null
+        if (!widget || !knownWidgets.includes(widget)) {
+            skipped.push(item.appKey ?? item.type)
+            continue
+        }
+        items.push({
+            id: item.id,
+            widget,
+            layout: { x: item.x, y: item.y, w: item.w, h: item.h },
+            config: configs[item.id] ?? null,
+        })
+    }
+    return {
+        seed: {
+            dashboard: {
+                name: dashboard.name,
+                code: seed.dashboard.code,
+            },
+            items: sortItems(items),
+        },
+        skipped,
+    }
+}
