@@ -181,7 +181,7 @@ const pull = async () => {
     const dashboard = data.dashboards?.[0]
     if (!dashboard) {
         console.error(
-            `seed pull: no dashboard with code ${code} on ${url} — push first (pnpm seed:${target === 'local' ? 'local' : 'demo'})`
+            `seed pull: no dashboard with code ${code} on ${url} — push first (node scripts/seed.mjs ${target})`
         )
         process.exit(1)
     }
