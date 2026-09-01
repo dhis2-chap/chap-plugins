@@ -1,0 +1,38 @@
+.item {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    background: var(--colors-white);
+    border: 1px solid var(--colors-grey300);
+    border-radius: 4px;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 4px 8px;
+    background: var(--colors-grey100);
+    border-bottom: 1px solid var(--colors-grey300);
+    cursor: grab;
+}
+
+.title {
+    overflow: hidden;
+    font-size: 13px;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.body {
+    flex: 1;
+    overflow: auto;
+}
+
+.placeholder {
+    padding: 16px;
+    color: var(--colors-grey600);
+}

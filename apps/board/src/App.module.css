@@ -6,11 +6,3 @@
     padding: 16px;
     color: var(--colors-red600);
 }
-
-.placeholderItem {
-    height: 100%;
-    background: var(--colors-grey200);
-    border-radius: 4px;
-    padding: 8px;
-    cursor: grab;
-}

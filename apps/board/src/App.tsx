@@ -5,6 +5,7 @@ import 'react-resizable/css/styles.css'
 import styles from './App.module.css'
 import { Board } from './Board'
 import { fetchSeed, type Seed } from './boardApi'
+import { BoardItem } from './BoardItem'
 
 const App = () => {
     const [seed, setSeed] = useState<Seed | null>(null)
@@ -25,13 +26,7 @@ const App = () => {
             ) : seed ? (
                 <Board
                     initialSeed={seed}
-                    renderItem={(item) => (
-                        <div className={styles.placeholderItem}>
-                            <div className="board-drag-handle">
-                                {item.widget}
-                            </div>
-                        </div>
-                    )}
+                    renderItem={(item) => <BoardItem item={item} />}
                 />
             ) : (
                 <p>Loading dashboard.seed.json…</p>
