@@ -16,7 +16,8 @@ packages/shared/        @chap-widgets/shared — source-only, bundled into each 
   src/dhis2/            useOrgUnitNames
 widgets/_template/      The widget blueprint — `pnpm new-widget <name>` copies it
 widgets/<name>/         One dashboard widget each; see the WIDGET CONTRACT in its README.md
-scripts/                new-widget.mjs, deploy.mjs, regen-api.mjs
+scripts/                new-widget.mjs, deploy.mjs, seed.mjs, regen-api.mjs
+dashboard.seed.json     Source of truth for the seed-owned "CHAP Widgets" dashboard (layout + per-item config, stable item UIDs)
 ```
 
 ## Commands
@@ -27,11 +28,14 @@ pnpm verify                         # typecheck + lint + build everything — ru
 pnpm --filter @chap-widgets/<name> start   # dev server for one widget
 pnpm deploy:local [name…]           # build + install on http://localhost:8090 (admin/district)
 pnpm deploy:demo  [name…]           # build + install on $DHIS2_DEMO_URL ($D2_USERNAME/$D2_PASSWORD)
+pnpm seed:local | pnpm seed:demo    # push dashboard.seed.json → seed-owned "CHAP Widgets" dashboard (layout + item configs); auto-appends new widgets
+pnpm seed:pull [local|demo|url]     # pull the live "CHAP Widgets" dashboard back into dashboard.seed.json
 pnpm regen-api [openapi-url]        # regenerate packages/shared/src/chap-api (default http://localhost:8000/openapi.json)
 ```
 
 CI (`.github/workflows/ci.yml`) runs `pnpm verify` on PRs; pushes to `main`
-additionally deploy every widget to the demo instance (repo variable
+additionally deploy every widget to the demo instance and then run
+`pnpm seed:demo` to refresh the "CHAP Widgets" dashboard there (repo variable
 `DHIS2_DEMO_URL` + secrets `DHIS2_DEMO_USERNAME`/`DHIS2_DEMO_PASSWORD`;
 skipped with a notice until those are set).
 
@@ -58,6 +62,13 @@ skipped with a notice until those are set).
 6. **Shared code changes affect all widgets** — after touching
    `packages/shared`, run `pnpm verify` (it builds every widget, including
    the template).
+7. **`dashboard.seed.json` owns exactly one dashboard**: `pnpm seed:local` /
+   `pnpm seed:demo` overwrite the seed-owned "CHAP Widgets" dashboard (its
+   layout and every item's datastore config) and nothing else — the "Test"
+   dashboard (`OHOPHFFLD2N`) is never touched and stays a manual sandbox. To
+   change the layout: arrange/configure it on the real dashboard, then
+   `pnpm seed:pull` to capture it back into `dashboard.seed.json`, and
+   commit the diff.
 
 ## Local dev loop
 
@@ -66,7 +77,8 @@ the chap route + chap-core expected to be running behind it. The "Test"
 dashboard (id `OHOPHFFLD2N`) is where widgets are tried out: deploy with
 `pnpm deploy:local <name>`, then add the widget as a dashboard item (they
 show up in the item picker as "CHAP · <Name>"), configure it in dashboard
-edit mode, save, and check view mode.
+edit mode, save, and check view mode. `pnpm seed:local` sets up the "CHAP
+Widgets" dashboard (all widgets, laid out and configured) in one command.
 
 `pnpm --filter @chap-widgets/<name> start` serves the widget standalone with
 a mode-toggle harness — good for iterating on forms/views without deploying,

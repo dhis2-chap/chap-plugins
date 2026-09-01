@@ -32,6 +32,13 @@ Then open the Dashboard app, edit a dashboard, and add items — the widgets
 appear in the item picker as **CHAP · <Name>**. Configure the item while the
 dashboard is in edit mode; the config is stored per dashboard item.
 
+Or skip the manual setup: `pnpm seed:local` pushes `dashboard.seed.json` to
+create/update a ready-made "CHAP Widgets" dashboard with every widget already
+laid out and configured. To change its layout, arrange it on the real
+dashboard, run `pnpm seed:pull` to capture that back into
+`dashboard.seed.json`, then commit and push — the next CI run reproduces it
+on the demo instance.
+
 Widgets fetch data from chap-core through the instance's DHIS2 route
 (`/api/routes/chap/run`), which the CHAP Modeling App's settings create. If
 the route or backend is missing, widgets show a friendly notice instead.
