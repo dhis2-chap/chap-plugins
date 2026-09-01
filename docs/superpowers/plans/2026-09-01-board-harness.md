@@ -24,10 +24,12 @@
 ### Task 1: Pure seed transforms `applyBoardLayout` + `applyCapturedConfigs`
 
 **Files:**
+
 - Modify: `scripts/lib/seed-core.mjs` (append after `mergePulledDashboard`)
 - Test: `scripts/lib/seed-core.test.mjs` (append; match existing `test()`/`assert` style)
 
 **Interfaces:**
+
 - Consumes: existing seed shape `{ dashboard, items: [{ id, widget, layout: {x,y,w,h}, config }] }`.
 - Produces: `applyBoardLayout(seed, layouts)` where `layouts` is `[{ id, x, y, w, h }]` → new seed (throws `Error('board layout: unknown item id "<id>"')` on unknown id; unmentioned items unchanged; input not mutated). `applyCapturedConfigs(seed, configs)` where `configs` maps item id → object | null | undefined (undefined/absent = capture failed → keep previous config) → new seed. Task 3's middleware imports both.
 
@@ -157,11 +159,13 @@ git commit -m "Add board seed transforms: applyBoardLayout, applyCapturedConfigs
 ### Task 2: `apps/board` package scaffold + workspace wiring
 
 **Files:**
+
 - Modify: `pnpm-workspace.yaml` (packages list)
 - Modify: `package.json` (root — add `board` script)
 - Create: `apps/board/package.json`, `apps/board/d2.config.js`, `apps/board/tsconfig.json`, `apps/board/vite.config.mts`, `apps/board/src/Globals.d.ts`, `apps/board/src/vite-env.d.ts`, `apps/board/src/App.tsx`, `apps/board/src/App.module.css`
 
 **Interfaces:**
+
 - Produces: a starting/tsc-checkable d2 app; `apps/board/vite.config.mts` is where Task 3 registers `boardSeedPlugin()`; `src/App.tsx` is replaced by Task 4.
 
 - [ ] **Step 1: Workspace + root script**
@@ -338,10 +342,12 @@ git commit -m "Scaffold apps/board dev harness package"
 ### Task 3: Vite dev middleware — `GET/PUT /__board/seed`
 
 **Files:**
+
 - Create: `apps/board/vite-plugin-seed.mts`
 - Modify: `apps/board/vite.config.mts` (register the plugin)
 
 **Interfaces:**
+
 - Consumes: `validateSeed`, `autoAddWidgets`, `applyBoardLayout`, `applyCapturedConfigs`, `serializeSeed` from `scripts/lib/seed-core.mjs`; `discoverWidgets(widgetsDir)` from `scripts/lib/widgets.mjs`; `resolveTarget('local')` from `scripts/lib/targets.mjs`.
 - Produces: `GET /__board/seed` → `{ seed }` (after auto-adding missing widgets, persisting if any were added); `PUT /__board/seed` body `{ layouts: [{ id, x, y, w, h }] }` → `{ seed, warnings: string[] }`; errors → status 400/405 with `{ error }`. Task 4's `boardApi.ts` is the client.
 
@@ -394,7 +400,9 @@ const readBody = (req: NodeJS.ReadableStream): Promise<string> =>
  * 200 → the stored config, 404 → null, anything else → the id is left out
  * (applyCapturedConfigs then keeps the previous seed config) + a warning.
  */
-const captureConfigs = async (seed: { items: { id: string; widget: string }[] }) => {
+const captureConfigs = async (seed: {
+    items: { id: string; widget: string }[]
+}) => {
     const { url, username, password } = resolveTarget('local')
     const authorization = `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`
     const configs: Record<string, unknown> = {}
@@ -424,7 +432,11 @@ const captureConfigs = async (seed: { items: { id: string; widget: string }[] })
 }
 
 const sendJson = (
-    res: { statusCode: number; setHeader: (k: string, v: string) => void; end: (b: string) => void },
+    res: {
+        statusCode: number
+        setHeader: (k: string, v: string) => void
+        end: (b: string) => void
+    },
     status: number,
     payload: unknown
 ) => {
@@ -516,10 +528,12 @@ git commit -m "Serve GET/PUT /__board/seed from board dev middleware"
 ### Task 4: Board UI — grid, autosave, top bar (placeholder item bodies)
 
 **Files:**
+
 - Create: `apps/board/src/boardApi.ts`, `apps/board/src/gridConstants.ts`, `apps/board/src/TopBar.tsx`, `apps/board/src/TopBar.module.css`, `apps/board/src/Board.tsx`
 - Modify: `apps/board/src/App.tsx`, `apps/board/src/App.module.css`
 
 **Interfaces:**
+
 - Consumes: Task 3's endpoints.
 - Produces: `boardApi.ts` exports `type ItemLayout = { id: string; x: number; y: number; w: number; h: number }`, `type SeedItem = { id: string; widget: string; layout: { x; y; w; h: number }; config: Record<string, unknown> | null }`, `type Seed = { dashboard: { name: string; code: string }; items: SeedItem[] }`, `fetchSeed(): Promise<Seed>`, `saveLayouts(layouts: ItemLayout[]): Promise<{ seed: Seed; warnings: string[] }>`. `Board.tsx` renders a `renderItem(item: SeedItem) => ReactNode` placeholder that Task 5 replaces with `BoardItem`. Grid items carry literal class hooks `board-drag-handle` (drag) and `board-no-drag` (cancel) used by Task 5's header.
 
@@ -669,7 +683,12 @@ export const TopBar = ({
 ```tsx
 import React, { useRef, useState } from 'react'
 import RGL, { WidthProvider, type Layout } from 'react-grid-layout'
-import { saveLayouts, type ItemLayout, type Seed, type SeedItem } from './boardApi'
+import {
+    saveLayouts,
+    type ItemLayout,
+    type Seed,
+    type SeedItem,
+} from './boardApi'
 import {
     GRID_COLUMNS,
     GRID_COMPACT_TYPE,
@@ -849,6 +868,7 @@ Expected: PASS.
 - [ ] **Step 3: Verify live**
 
 Start `pnpm board`, log in (localhost:8090, admin/district), and check in the browser:
+
 - All four seed items render as grey placeholder cards in the seeded 2×2 arrangement.
 - Drag one card → top bar cycles dirty → saving → saved; `git diff dashboard.seed.json` shows the move.
 - "Sync seed" with nothing changed → saved (idempotent diff).
@@ -867,10 +887,12 @@ git commit -m "Render the seed on a react-grid-layout board with autosave"
 ### Task 5: Mount the real widget Plugins per item
 
 **Files:**
+
 - Create: `apps/board/src/plugins.ts`, `apps/board/src/BoardItem.tsx`, `apps/board/src/BoardItem.module.css`
 - Modify: `apps/board/src/App.tsx` (swap placeholder `renderItem` for `BoardItem`), `apps/board/src/App.module.css` (drop `.placeholderItem`)
 
 **Interfaces:**
+
 - Consumes: `SeedItem` from `boardApi.ts`; `DashboardPluginProps` from `@chap-widgets/shared`; class hooks `board-drag-handle` / `board-no-drag` from Task 4's grid.
 - Produces: `pluginComponents: Record<string, LazyExoticComponent<ComponentType<DashboardPluginProps>>>` keyed by widget directory name; `BoardItem({ item }: { item: SeedItem })`.
 
@@ -891,8 +913,7 @@ const modules = import.meta.glob<{
 }>(['../../../widgets/*/src/Plugin.tsx', '!**/_template/**'])
 
 const widgetFromPath = (modulePath: string) =>
-    modulePath.match(/\/widgets\/([^/]+)\/src\/Plugin\.tsx$/)?.[1] ??
-    modulePath
+    modulePath.match(/\/widgets\/([^/]+)\/src\/Plugin\.tsx$/)?.[1] ?? modulePath
 
 export const pluginComponents: Record<
     string,
@@ -1033,6 +1054,7 @@ Expected: PASS.
 - [ ] **Step 3: Verify live** (needs localhost:8090 with the chap route + chap-core up)
 
 Start `pnpm board`, log in, and check:
+
 - All four widgets render their real Plugins; model-status (configured in the seed/datastore) shows job data; unconfigured widgets show "Widget not configured".
 - Item headers show real titles (e.g. model-status's configured title) once loaded.
 - Toggle one widget to Edit → its ConfigForm appears; save a config → the alert fires; toggle back to View → data renders.
@@ -1053,10 +1075,12 @@ git commit -m "Mount every widget's Plugin on the board with per-item mode toggl
 ### Task 6: Docs + full verification + acceptance
 
 **Files:**
+
 - Modify: `CLAUDE.md` (repo map, commands, local dev loop, rule 7)
 - Modify: `README.md` (quick start)
 
 **Interfaces:**
+
 - Consumes: everything above, complete.
 
 - [ ] **Step 1: CLAUDE.md**

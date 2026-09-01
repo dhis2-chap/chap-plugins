@@ -60,16 +60,16 @@ existing script libs (`scripts/lib/seed-core.mjs`, `widgets.mjs`,
   anything was added, same as push does), respond `{ seed }`. New widgets
   therefore appear on the board on next dev-server load with no extra step.
 - **`PUT /__board/seed`** — body `{ layouts: [{ id, x, y, w, h }] }`.
-  1. Apply layouts via a new pure `applyBoardLayout(seed, layouts)` in
-     `seed-core.mjs` (unknown ids are an error).
-  2. **Config capture**: for each item, `GET
-     dataStore/chap-widgets/<id>` against the `local` target
-     (`resolveTarget('local')`, basic auth). 200 → that JSON becomes the
-     item's seed config; 404 → `null`. Any other failure keeps the item's
-     previous seed config and adds a warning to the response — a flaky
-     instance must not block a layout save.
-  3. `validateSeed`, `serializeSeed`, write `dashboard.seed.json`.
-  4. Respond `{ seed, warnings }`.
+    1. Apply layouts via a new pure `applyBoardLayout(seed, layouts)` in
+       `seed-core.mjs` (unknown ids are an error).
+    2. **Config capture**: for each item, `GET
+dataStore/chap-widgets/<id>` against the `local` target
+       (`resolveTarget('local')`, basic auth). 200 → that JSON becomes the
+       item's seed config; 404 → `null`. Any other failure keeps the item's
+       previous seed config and adds a warning to the response — a flaky
+       instance must not block a layout save.
+    3. `validateSeed`, `serializeSeed`, write `dashboard.seed.json`.
+    4. Respond `{ seed, warnings }`.
 
 Pure seed transforms (`applyBoardLayout`, config-merge helper if one falls
 out) live in `scripts/lib/seed-core.mjs` with unit tests in
@@ -97,7 +97,7 @@ stays a thin HTTP/fs/fetch shell, verified live.
   to the widget name) and a per-item **view/edit toggle** that switches the
   `dashboardMode` prop passed to that plugin. Body renders the lazy Plugin in
   `Suspense` with `{ dashboardItemId: item.id, dashboardMode,
-  dashboardItemFilters: {} }`.
+dashboardItemFilters: {} }`.
 - **Autosave**: `onLayoutChange` → diff against the last-saved layout (RGL
   fires on mount and compaction, so no-op changes are dropped) → debounce
   (~800 ms) → `PUT /__board/seed`. A top bar shows the board title, a
@@ -134,17 +134,17 @@ commit → pnpm seed:demo reproduces the board state anywhere
 - No React component test infra exists in the repo (widgets have none);
   parity kept — the UI is verified live.
 - Live acceptance on localhost:8090:
-  1. `pnpm board` → all four widgets render; model-status (configured in the
-     seed) shows data.
-  2. Drag + resize one item → `git diff dashboard.seed.json` shows exactly
-     that layout change; `pnpm seed:local` then shows the same arrangement on
-     the real dashboard.
-  3. Configure a widget via its edit toggle → the real dashboard item shows
-     the new config (shared datastore); "Sync seed" captures it into the
-     seed file.
-  4. `pnpm seed:pull` after a board save produces no layout surprises when
-     the live dashboard was pushed from the same seed (convergence).
-  5. `pnpm verify` green.
+    1. `pnpm board` → all four widgets render; model-status (configured in the
+       seed) shows data.
+    2. Drag + resize one item → `git diff dashboard.seed.json` shows exactly
+       that layout change; `pnpm seed:local` then shows the same arrangement on
+       the real dashboard.
+    3. Configure a widget via its edit toggle → the real dashboard item shows
+       the new config (shared datastore); "Sync seed" captures it into the
+       seed file.
+    4. `pnpm seed:pull` after a board save produces no layout surprises when
+       the live dashboard was pushed from the same seed (convergence).
+    5. `pnpm verify` green.
 
 ## Known limitations / future work
 
