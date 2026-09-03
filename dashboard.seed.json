@@ -10,18 +10,24 @@
             "layout": {
                 "x": 0,
                 "y": 0,
-                "w": 20,
+                "w": 29,
                 "h": 20
             },
-            "config": null
+            "config": {
+                "widget": "chap-widget-evaluation-compare",
+                "version": 1,
+                "orgUnitId": "YvLOmtTQD6b",
+                "backtestId": 1,
+                "orgUnitName": "02 Phongsali"
+            }
         },
         {
             "id": "Y1T81JCnpaf",
             "widget": "model-status",
             "layout": {
-                "x": 20,
+                "x": 29,
                 "y": 0,
-                "w": 20,
+                "w": 31,
                 "h": 20
             },
             "config": {
@@ -34,23 +40,35 @@
             "id": "yTDfwg1kc04",
             "widget": "outbreak-alerts",
             "layout": {
-                "x": 40,
-                "y": 0,
-                "w": 20,
-                "h": 20
+                "x": 0,
+                "y": 20,
+                "w": 29,
+                "h": 23
             },
-            "config": null
+            "config": {
+                "title": "Board test alert config",
+                "widget": "chap-widget-outbreak-alerts",
+                "version": 1,
+                "threshold": 25,
+                "predictionId": 1
+            }
         },
         {
             "id": "WyJvJQzt5wn",
             "widget": "prediction-chart",
             "layout": {
-                "x": 0,
+                "x": 29,
                 "y": 20,
-                "w": 20,
-                "h": 20
+                "w": 31,
+                "h": 23
             },
-            "config": null
+            "config": {
+                "widget": "chap-widget-prediction-chart",
+                "version": 1,
+                "orgUnitId": "W6sNfkJcXGC",
+                "orgUnitName": "01 Vientiane Capital",
+                "predictionId": 3
+            }
         }
     ]
 }
