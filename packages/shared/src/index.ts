@@ -23,6 +23,11 @@ export { isDhis2NotFound } from './config/dhis2Error'
 
 // DHIS2 metadata helpers
 export { useOrgUnitNames } from './dhis2/useOrgUnitNames'
+export { useOrgUnitGeometries } from './dhis2/useOrgUnitGeometries'
+export type {
+    OrgUnitFeature,
+    OrgUnitGeometry,
+} from './dhis2/useOrgUnitGeometries'
 
 // Charts
 export { FanChart } from './charts/FanChart'

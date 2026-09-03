@@ -109,5 +109,11 @@ dashboard.seed.json directly — the fastest layout/config loop, no deploy.
   0.1/0.9 → 80% band.
 - Prefer the kebab-case `getActualCasesAlias…` endpoint over the deprecated
   camelCase `getActualCases…`.
+- maplibre-gl resolves its web worker as `maplibre-gl-worker.mjs` next to the
+  main module at runtime — no bundler emits it (silent 404: GeoJSON sources
+  never load, nothing renders, no error). Fix:
+  `setWorkerUrl(workerUrl)` with
+  `import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'`
+  (see widgets/prediction-map).
 - Reference implementations live in the sibling repo
   `../chap-frontend` (`apps/uncertainty-dashboard-plugin`, `apps/modeling-app`).

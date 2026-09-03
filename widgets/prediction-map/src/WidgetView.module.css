@@ -1,0 +1,101 @@
+/*
+ * On a real dashboard the plugin fills its iframe (100vh = item height); in
+ * the board/dev harnesses the plugin is mounted inline, where max-height
+ * caps the view at the host container instead.
+ */
+.view {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    max-height: 100%;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 12px 6px;
+}
+
+.subtitle {
+    overflow: hidden;
+    font-size: 13px;
+    color: var(--colors-grey700);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.periodNav {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 4px;
+}
+
+.periodLabel {
+    min-width: 72px;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: center;
+}
+
+.mapWrap {
+    position: relative;
+    flex: 1;
+    min-height: 240px;
+    margin: 0 12px 12px;
+    overflow: hidden;
+    border: 1px solid var(--colors-grey300);
+    border-radius: 4px;
+}
+
+.map {
+    position: absolute;
+    inset: 0;
+}
+
+.legend {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    z-index: 5;
+    padding: 8px 10px;
+    font-size: 11px;
+    color: var(--colors-grey800);
+    background: rgb(255 255 255 / 92%);
+    border-radius: 4px;
+    box-shadow: 0 1px 4px rgb(0 0 0 / 20%);
+}
+
+.legendTitle {
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+.legendRow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    line-height: 16px;
+}
+
+.swatch {
+    flex: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+}
+
+.popup {
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.popupTitle {
+    font-weight: 600;
+}
+
+.popupRange {
+    color: var(--colors-grey700);
+}

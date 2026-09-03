@@ -61,6 +61,7 @@ const REPLACEMENTS = [
     ['@chap-widgets/template', `@chap-widgets/${name}`],
     ['CHAP · Template', `CHAP · ${titleName}`],
     ['Template widget', `${titleName} widget`],
+    ['deploy:local template', `deploy:local ${name}`],
 ]
 
 const substituteInTree = (dir) => {
