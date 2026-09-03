@@ -33,6 +33,7 @@ pnpm deploy:local [name…]           # build + install on http://localhost:8090
 pnpm deploy:demo  [name…]           # build + install on $DHIS2_DEMO_URL ($D2_USERNAME/$D2_PASSWORD)
 pnpm seed:local | pnpm seed:demo    # push dashboard.seed.json → seed-owned "CHAP Widgets" dashboard (layout + item configs); auto-appends new widgets
 pnpm seed:pull [local|demo|url]     # pull the live "CHAP Widgets" dashboard back into dashboard.seed.json
+# --dashboard <name> on deploy:* or seed:* creates/overwrites a personal copy of the seed dashboard named <name> (deterministic ids — reruns update in place); seed file + seed-owned dashboard untouched
 pnpm regen-api [openapi-url]        # regenerate packages/shared/src/chap-api (default http://localhost:8000/openapi.json)
 ```
 
@@ -72,6 +73,9 @@ skipped with a notice until those are set).
    change the layout: arrange/configure it on the real dashboard and
    `pnpm seed:pull`, **or** use `pnpm board` (which autosaves layout and
    captures live configs into the seed directly) — then commit the diff.
+   `--dashboard <name>` (on deploy or seed) writes personal _copies_ derived
+   from the seed; those are one-way pushes — `seed:pull` ignores them and
+   they never feed back into `dashboard.seed.json`.
 
 ## Local dev loop
 

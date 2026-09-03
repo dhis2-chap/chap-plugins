@@ -7,6 +7,8 @@ import {
     applyCapturedConfigs,
     autoAddWidgets,
     buildDashboardItems,
+    deriveNamedSeed,
+    deterministicUid,
     generateUid,
     mergePulledDashboard,
     serializeSeed,
@@ -278,4 +280,76 @@ test('applyCapturedConfigs sets objects and keeps failed captures', () => {
 test('applyCapturedConfigs writes null for missing datastore entries', () => {
     const result = applyCapturedConfigs(validSeed(), { a1234567890: null })
     assert.equal(result.items[0].config, null)
+})
+
+test('deterministicUid is stable, valid and distinct per input', () => {
+    assert.equal(
+        deterministicUid('CHAP_WIDGETS_EDVIN:model-status'),
+        deterministicUid('CHAP_WIDGETS_EDVIN:model-status')
+    )
+    assert.match(deterministicUid('CHAP_WIDGETS_EDVIN:model-status'), UID_RE)
+    assert.notEqual(
+        deterministicUid('CHAP_WIDGETS_EDVIN:model-status'),
+        deterministicUid('CHAP_WIDGETS_EDVIN:prediction-chart')
+    )
+    assert.notEqual(
+        deterministicUid('CHAP_WIDGETS_EDVIN:model-status'),
+        deterministicUid('CHAP_WIDGETS_ANNA:model-status')
+    )
+})
+
+test('deriveNamedSeed derives the dashboard name and a prefixed code', () => {
+    const derived = deriveNamedSeed(validSeed(), 'edvin')
+    assert.deepEqual(derived.dashboard, {
+        name: 'edvin',
+        code: 'CHAP_WIDGETS_EDVIN',
+    })
+    validateSeed(derived)
+})
+
+test('deriveNamedSeed slugs non-alphanumerics in the code', () => {
+    const derived = deriveNamedSeed(validSeed(), "Edvin's test-board 2")
+    assert.equal(derived.dashboard.name, "Edvin's test-board 2")
+    assert.equal(derived.dashboard.code, 'CHAP_WIDGETS_EDVIN_S_TEST_BOARD_2')
+})
+
+test('deriveNamedSeed keeps widgets, layouts and configs but rewrites ids', () => {
+    const seed = validSeed()
+    const derived = deriveNamedSeed(seed, 'edvin')
+    assert.deepEqual(
+        derived.items.map(({ widget, layout, config }) => ({
+            widget,
+            layout,
+            config,
+        })),
+        seed.items.map(({ widget, layout, config }) => ({
+            widget,
+            layout,
+            config,
+        }))
+    )
+    const originalIds = new Set(seed.items.map((item) => item.id))
+    for (const item of derived.items) {
+        assert.match(item.id, UID_RE)
+        assert.ok(!originalIds.has(item.id))
+    }
+    // Deterministic: a second derivation targets the same items.
+    assert.deepEqual(derived, deriveNamedSeed(validSeed(), 'edvin'))
+    // A different name targets different items.
+    const other = deriveNamedSeed(validSeed(), 'anna')
+    assert.notDeepEqual(
+        derived.items.map((item) => item.id),
+        other.items.map((item) => item.id)
+    )
+})
+
+test('deriveNamedSeed rejects names without alphanumerics', () => {
+    assert.throws(() => deriveNamedSeed(validSeed(), '!!!'), /dashboard name/)
+    assert.throws(() => deriveNamedSeed(validSeed(), ''), /dashboard name/)
+})
+
+test('deriveNamedSeed does not mutate its input', () => {
+    const seed = validSeed()
+    deriveNamedSeed(seed, 'edvin')
+    assert.deepEqual(seed, validSeed())
 })

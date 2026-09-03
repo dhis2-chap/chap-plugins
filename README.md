@@ -39,6 +39,13 @@ dashboard, run `pnpm seed:pull` to capture that back into
 `dashboard.seed.json`, then commit and push — the next CI run reproduces it
 on the demo instance.
 
+Want your own copy instead of the shared one? Add `--dashboard <name>`:
+`pnpm deploy:local --dashboard edvin` deploys every widget and then
+creates/overwrites a personal dashboard named "edvin" with the same layout
+and configs as the seed (rerunning updates it in place). Use
+`pnpm seed:local --dashboard edvin` to refresh just the dashboard without
+rebuilding.
+
 For layout work there's also a local board: `pnpm board` renders every
 widget on one drag/resize grid straight from source (no deploy needed) and
 autosaves the arrangement — plus each widget's live config — back into

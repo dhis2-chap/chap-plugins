@@ -1,4 +1,4 @@
-import { randomBytes } from 'node:crypto'
+import { createHash, randomBytes } from 'node:crypto'
 
 /**
  * Pure logic for dashboard.seed.json — no filesystem, no network — so it is
@@ -27,6 +27,45 @@ export const generateUid = () => {
         uid += UID_CHARS[bytes[index] % UID_CHARS.length]
     }
     return uid
+}
+
+/**
+ * UID derived from a hash of `input` instead of randomness, so the same
+ * input always addresses the same DHIS2 object (and datastore key).
+ */
+export const deterministicUid = (input) => {
+    const digest = createHash('sha1').update(input).digest()
+    let uid = UID_LETTERS[digest[0] % UID_LETTERS.length]
+    for (let index = 1; index < 11; index++) {
+        uid += UID_CHARS[digest[index] % UID_CHARS.length]
+    }
+    return uid
+}
+
+/**
+ * Clone the seed as a personal dashboard named `name`: the code gets a
+ * name-derived suffix (the upsert key, so reruns overwrite the same
+ * dashboard) and every item id is re-derived from code + widget (stable
+ * across runs — no duplicate items or leaked datastore keys).
+ */
+export const deriveNamedSeed = (seed, name) => {
+    const slug = String(name)
+        .toUpperCase()
+        .replace(/[^A-Z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '')
+    if (slug.length === 0) {
+        throw new Error(
+            `dashboard name "${name}" must contain at least one letter or digit`
+        )
+    }
+    const code = `${seed.dashboard.code}_${slug}`
+    return {
+        dashboard: { name, code },
+        items: seed.items.map((item) => ({
+            ...item,
+            id: deterministicUid(`${code}:${item.widget}`),
+        })),
+    }
 }
 
 const APP_KEY_PREFIX = 'chap-widget-'

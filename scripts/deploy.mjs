@@ -10,10 +10,14 @@
  * With no widget names, every widget under widgets/ (except _template) is
  * built and deployed. Names are directory names, e.g. `prediction-chart`.
  * Pass --no-build to deploy existing build/bundle zips without rebuilding.
+ * Pass --dashboard <name> to additionally create/overwrite a personal copy
+ * of the seed dashboard named <name> (all widgets, seed layout + configs)
+ * after a fully successful deploy — see scripts/seed.mjs.
  */
 import { execFileSync } from 'node:child_process'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { parseDashboardFlag } from './lib/args.mjs'
 import { resolveTarget } from './lib/targets.mjs'
 import { discoverWidgets } from './lib/widgets.mjs'
 
@@ -23,14 +27,23 @@ const repoRoot = path.resolve(
 )
 const widgetsDir = path.join(repoRoot, 'widgets')
 
-const args = process.argv.slice(2)
-const skipBuild = args.includes('--no-build')
-const positional = args.filter((arg) => !arg.startsWith('--'))
+let dashboardName = null
+let restArgs
+try {
+    ;({ name: dashboardName, rest: restArgs } = parseDashboardFlag(
+        process.argv.slice(2)
+    ))
+} catch (error) {
+    console.error(`deploy: ${error.message}`)
+    process.exit(1)
+}
+const skipBuild = restArgs.includes('--no-build')
+const positional = restArgs.filter((arg) => !arg.startsWith('--'))
 const [target, ...requestedWidgets] = positional
 
 if (!target) {
     console.error(
-        'Usage: node scripts/deploy.mjs <local|demo|url> [widget…] [--no-build]'
+        'Usage: node scripts/deploy.mjs <local|demo|url> [widget…] [--no-build] [--dashboard <name>]'
     )
     process.exit(1)
 }
@@ -103,5 +116,28 @@ for (const { widget, ok } of results) {
 }
 
 if (results.some((result) => !result.ok)) {
+    if (dashboardName !== null) {
+        console.error(
+            `deploy: skipping dashboard "${dashboardName}" — not every widget deployed`
+        )
+    }
     process.exit(1)
+}
+
+if (dashboardName !== null) {
+    console.log(`\n▸ Seeding dashboard "${dashboardName}" on ${url}`)
+    try {
+        run(
+            'node',
+            [
+                path.join(repoRoot, 'scripts', 'seed.mjs'),
+                target,
+                '--dashboard',
+                dashboardName,
+            ],
+            repoRoot
+        )
+    } catch {
+        process.exit(1)
+    }
 }

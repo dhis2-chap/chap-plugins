@@ -7,18 +7,26 @@
  * Usage:
  *   node scripts/seed.mjs [local|demo|url]           # push (default: local)
  *   node scripts/seed.mjs --pull [local|demo|url]    # pull layout + configs
+ *   node scripts/seed.mjs [target] --dashboard <name>  # push a named copy
  *
  * Push REPLACES the seed-owned dashboard (found by dashboard.code) — its
  * layout and every item's datastore config. It never touches other
  * dashboards. New widgets under widgets/ are auto-appended to the seed.
+ *
+ * With --dashboard <name>, push instead creates/overwrites a personal copy
+ * named <name> (code CHAP_WIDGETS_<SLUG>, item ids derived from code +
+ * widget so reruns overwrite in place). The seed file is left untouched and
+ * the seed-owned dashboard is not modified. Pull does not support it.
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { parseDashboardFlag } from './lib/args.mjs'
 import {
     DEFAULT_DASHBOARD,
     autoAddWidgets,
     buildDashboardItems,
+    deriveNamedSeed,
     mergePulledDashboard,
     serializeSeed,
     validateSeed,
@@ -38,9 +46,24 @@ const seedPath = path.join(repoRoot, 'dashboard.seed.json')
 const seedFileName = path.basename(seedPath)
 const widgetsDir = path.join(repoRoot, 'widgets')
 
-const args = process.argv.slice(2)
-const pullMode = args.includes('--pull')
-const [target = 'local'] = args.filter((arg) => !arg.startsWith('--'))
+let dashboardName = null
+let restArgs
+try {
+    ;({ name: dashboardName, rest: restArgs } = parseDashboardFlag(
+        process.argv.slice(2)
+    ))
+} catch (error) {
+    console.error(`seed: ${error.message}`)
+    process.exit(1)
+}
+const pullMode = restArgs.includes('--pull')
+if (pullMode && dashboardName !== null) {
+    console.error(
+        'seed: --pull --dashboard is not supported — pull only targets the seed-owned dashboard'
+    )
+    process.exit(1)
+}
+const [target = 'local'] = restArgs.filter((arg) => !arg.startsWith('--'))
 
 let resolved
 try {
@@ -154,15 +177,23 @@ const upsertConfig = async (itemId, config) => {
 }
 
 const push = async () => {
-    const { seed, added } = autoAddWidgets(
+    const { seed: canonical, added } = autoAddWidgets(
         loadSeed(),
         discoverWidgets(widgetsDir)
     )
-    validateSeed(seed)
-    writeFileSync(seedPath, serializeSeed(seed))
-    if (added.length > 0) {
-        console.log(`▸ Added to dashboard.seed.json: ${added.join(', ')}`)
+    validateSeed(canonical)
+    // A named push is a derived copy: it must not rewrite the seed file.
+    if (dashboardName === null) {
+        writeFileSync(seedPath, serializeSeed(canonical))
+        if (added.length > 0) {
+            console.log(`▸ Added to dashboard.seed.json: ${added.join(', ')}`)
+        }
     }
+    const seed =
+        dashboardName === null
+            ? canonical
+            : deriveNamedSeed(canonical, dashboardName)
+    validateSeed(seed)
 
     const payload = {
         name: seed.dashboard.name,
