@@ -13,7 +13,8 @@ packages/shared/        @chap-widgets/shared — source-only, bundled into each 
   src/config/           useDashboardItemConfig — per-dashboard-item config in datastore ns `chap-widgets`
   src/plugin/           WidgetShell (edit/view/unconfigured state machine), DashboardPluginProps
   src/charts/           FanChart + quantile/period helpers
-  src/dhis2/            useOrgUnitNames
+  src/maps/             ChoroplethMap + MapLegend — imported as `@chap-widgets/shared/maps`, NOT from the root
+  src/dhis2/            useOrgUnitNames, useOrgUnitGeometries
 widgets/_template/      The widget blueprint — `pnpm new-widget <name>` copies it
 widgets/<name>/         One dashboard widget each; see the WIDGET CONTRACT in its README.md
 apps/board/             Dev-only board harness: every widget's Plugin on one react-grid-layout page; drag/resize + live configs autosave into dashboard.seed.json (never built/deployed)
@@ -114,6 +115,17 @@ dashboard.seed.json directly — the fastest layout/config loop, no deploy.
   never load, nothing renders, no error). Fix:
   `setWorkerUrl(workerUrl)` with
   `import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'`
-  (see widgets/prediction-map).
+  (done once in `shared/src/maps/ChoroplethMap.tsx`). That call is a
+  module side effect, so re-exporting the maps module from
+  `shared/src/index.ts` would pin ~1 MB of maplibre into **every** widget's
+  bundle — hence the separate `@chap-widgets/shared/maps` subpath. Import
+  map code from there, and never from the package root.
+- `pnpm test` runs `node --test` over `scripts/**/*.test.mjs` plus
+  `packages/**/*.test.ts` and `widgets/**/src/**/*.test.ts` — node strips the
+  types itself, so there is no test runner to configure. Two consequences for
+  a module you want to unit-test: relative imports it makes need the explicit
+  `.ts` extension (node ESM won't guess it), and it must not _value_-import
+  anything that pulls in `.tsx` — node cannot transform JSX. `import type`
+  from `@chap-widgets/shared` is erased and therefore always safe.
 - Reference implementations live in the sibling repo
   `../chap-frontend` (`apps/uncertainty-dashboard-plugin`, `apps/modeling-app`).
