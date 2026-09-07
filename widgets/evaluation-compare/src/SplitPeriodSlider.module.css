@@ -1,0 +1,118 @@
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 4px 4px 0;
+}
+
+.header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.label {
+    color: var(--colors-grey700, #4a5768);
+}
+
+.readout {
+    color: var(--colors-grey900, #212934);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+}
+
+.rail {
+    position: relative;
+    height: 16px;
+}
+
+/* The full-width, unselected portion of the track */
+.rail::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--colors-grey300, #d5dde5);
+    transform: translateY(-50%);
+}
+
+/* The periods the selected split forecasts */
+.window {
+    position: absolute;
+    top: 50%;
+    height: 4px;
+    min-width: 4px;
+    border-radius: 2px;
+    background: var(--colors-blue400, #7aaee5);
+    transform: translateY(-50%);
+}
+
+.input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 16px;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.input:focus {
+    outline: none;
+}
+
+.input::-webkit-slider-runnable-track {
+    height: 16px;
+    background: transparent;
+}
+
+.input::-moz-range-track {
+    height: 16px;
+    background: transparent;
+}
+
+.input::-webkit-slider-thumb {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background: var(--colors-blue600, #1d5288);
+    box-sizing: border-box;
+    box-shadow: 0 0 0 1px var(--colors-blue600, #1d5288);
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.input::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background: var(--colors-blue600, #1d5288);
+    box-sizing: border-box;
+    box-shadow: 0 0 0 1px var(--colors-blue600, #1d5288);
+}
+
+.input:focus-visible::-webkit-slider-thumb {
+    box-shadow: 0 0 0 3px var(--colors-blue200, #c7e0f7);
+}
+
+.input:focus-visible::-moz-range-thumb {
+    box-shadow: 0 0 0 3px var(--colors-blue200, #c7e0f7);
+}
+
+.scale {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--colors-grey600, #6e7a8a);
+    font-variant-numeric: tabular-nums;
+}

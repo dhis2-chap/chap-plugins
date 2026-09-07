@@ -17,13 +17,23 @@ export type FanChartProps = {
     height?: number
     /** y-axis label, e.g. the disease/target name */
     valueLabel?: string
+    /**
+     * Pins the top of the y-axis. Use it when several charts (or successive
+     * renders of one chart) must stay visually comparable; omit for auto-scale.
+     */
+    yMax?: number
 }
 
 /**
  * Prediction fan chart: observed actuals + median line + 50%/80% prediction
  * interval bands, one org unit per chart.
  */
-export const FanChart = ({ data, height = 320, valueLabel }: FanChartProps) => {
+export const FanChart = ({
+    data,
+    height = 320,
+    valueLabel,
+    yMax,
+}: FanChartProps) => {
     registerHighchartsModules()
 
     const hasActuals = data.actuals.some((value) => value !== null)
@@ -40,8 +50,9 @@ export const FanChart = ({ data, height = 320, valueLabel }: FanChartProps) => {
         yAxis: {
             title: { text: valueLabel ?? null },
             min: 0,
+            max: yMax,
         },
-        tooltip: { shared: true },
+        tooltip: { shared: true, valueDecimals: 1 },
         series: [
             {
                 name: i18n.t('80% prediction interval'),

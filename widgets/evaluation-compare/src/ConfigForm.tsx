@@ -105,7 +105,7 @@ export const ConfigForm = ({
                 ))}
             </SingleSelectField>
             <SingleSelectField
-                label={i18n.t('Split period')}
+                label={i18n.t('Initial split period')}
                 disabled={!selectedBacktest}
                 selected={
                     splitPeriod !== LATEST_SPLIT &&
