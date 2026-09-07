@@ -10,6 +10,9 @@
  * With no widget names, every widget under widgets/ (except _template) is
  * built and deployed. Names are directory names, e.g. `prediction-chart`.
  * Pass --no-build to deploy existing build/bundle zips without rebuilding.
+ * A widget counts as deployed when the app is installed on the instance:
+ * d2-app-scripts also exits non-zero when only its post-upload launch-URL
+ * smoke test failed, so failures are re-checked against /api/apps.
  * Pass --dashboard <name> to additionally create/overwrite a personal copy
  * of the seed dashboard named <name> (all widgets, seed layout + configs)
  * after a fully successful deploy — see scripts/seed.mjs.
@@ -17,7 +20,9 @@
 import { execFileSync } from 'node:child_process'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { fetchInstalledAppKeys } from './lib/apps.mjs'
 import { parseDashboardFlag } from './lib/args.mjs'
+import { widgetAppKey } from './lib/seed-core.mjs'
 import { resolveTarget } from './lib/targets.mjs'
 import { discoverWidgets } from './lib/widgets.mjs'
 
@@ -81,6 +86,28 @@ const run = (command, commandArgs, cwd) =>
         env: { ...process.env, CI: 'true' },
     })
 
+/**
+ * d2-app-scripts exits non-zero both when the upload failed and when only
+ * its post-upload launch-URL smoke test did — instances that redirect
+ * /api/apps/<key>/ to a login page (dropping basic auth across a scheme
+ * change) fail that check with the app installed and working. Ask the app
+ * store which one happened.
+ */
+const confirmInstalled = async (widget) => {
+    let keys
+    try {
+        keys = await fetchInstalledAppKeys({ url, username, password })
+    } catch (error) {
+        return {
+            ok: false,
+            note: `upload failed (could not reach /api/apps: ${error.message})`,
+        }
+    }
+    return keys.has(widgetAppKey(widget))
+        ? { ok: true, note: 'installed (launch-URL check failed)' }
+        : { ok: false, note: 'upload failed (app not installed)' }
+}
+
 const results = []
 for (const widget of widgets) {
     const widgetDir = path.join(widgetsDir, widget)
@@ -106,13 +133,13 @@ for (const widget of widgets) {
         )
         results.push({ widget, ok: true })
     } catch {
-        results.push({ widget, ok: false })
+        results.push({ widget, ...(await confirmInstalled(widget)) })
     }
 }
 
 console.log('\nDeploy summary:')
-for (const { widget, ok } of results) {
-    console.log(`  ${ok ? '✅' : '❌'} ${widget}`)
+for (const { widget, ok, note } of results) {
+    console.log(`  ${ok ? '✅' : '❌'} ${widget}${note ? ` — ${note}` : ''}`)
 }
 
 if (results.some((result) => !result.ok)) {
