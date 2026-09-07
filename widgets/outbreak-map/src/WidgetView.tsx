@@ -1,4 +1,5 @@
 import {
+    DatasetsService,
     PredictionsService,
     useOrgUnitGeometryContext,
     LoadingState,
@@ -7,14 +8,14 @@ import {
     STANDARD_QUANTILES,
     buildChartPeriods,
     buildStatsByPeriod,
+    buildThresholdMap,
+    canonicalizePeriodId,
     formatPeriodLabel,
-    type OrgUnitStats,
 } from '@chap-widgets/shared'
 import {
     ChoroplethMap,
     MapLegend,
     createMapPopup,
-    MAP_NO_DATA_COLOR,
     type MapLegendRow,
     type MapPopupRow,
 } from '@chap-widgets/shared/maps'
@@ -23,132 +24,145 @@ import { Button, IconChevronLeft16, IconChevronRight16 } from '@dhis2/ui'
 import { useQuery } from '@tanstack/react-query'
 import type { FeatureCollection, GeoJsonProperties, Geometry } from 'geojson'
 import React, { useEffect, useMemo, useState } from 'react'
-import { type Config } from './config'
+import { describeThresholdParams, type Config } from './config'
+import {
+    RATIO_BREAKS,
+    classifyExceedance,
+    type Exceedance,
+    type ExceedanceStatus,
+} from './exceedance'
 import styles from './WidgetView.module.css'
 
 /**
- * Sequential single-hue ramp (light → dark = fewer → more predicted cases).
- * 5 steps, colorblind-safe and monotone in lightness on a light surface.
+ * Sequential reds, one per {@link RATIO_BREAKS} class: the further a district's
+ * predicted median is above its endemic threshold, the deeper the red. Amber
+ * marks a district whose median stays under but whose 90th percentile crosses,
+ * and the greys are deliberately not on the red ramp — only an exceedance
+ * should read as an alert.
  */
-const CLASS_COLORS = ['#86b6ef', '#5598e7', '#2a78d6', '#1c5cab', '#0d366b']
+const RATIO_COLORS = ['#fcbba1', '#fc8d59', '#ef3b2c', '#cb181d', '#67000d']
+const POSSIBLE_COLOR = '#fee391'
+const BELOW_COLOR = '#dfe3e8'
+const NO_THRESHOLD_COLOR = '#b8bcc2'
+const NO_PREDICTION_COLOR = '#eceef0'
 
-/** `bounds` has one more entry than `colors`; class i covers bounds[i]..bounds[i+1] */
-type Scale = { bounds: number[]; colors: string[] }
+const STATUS_COLORS: Record<Exclude<ExceedanceStatus, 'above'>, string> = {
+    possible: POSSIBLE_COLOR,
+    below: BELOW_COLOR,
+    'no-threshold': NO_THRESHOLD_COLOR,
+    'no-prediction': NO_PREDICTION_COLOR,
+}
+
+const colorFor = (exceedance: Exceedance): string =>
+    exceedance.status === 'above'
+        ? RATIO_COLORS[exceedance.classIndex ?? 0]
+        : STATUS_COLORS[exceedance.status]
 
 const formatValue = (value: number): string =>
     value < 10
         ? String(Math.round(value * 10) / 10)
         : Math.round(value).toLocaleString()
 
-/**
- * Quantile class breaks over the medians of ALL periods, so colors stay
- * comparable while stepping through periods. Duplicate breaks (common with
- * many zero-predictions) collapse into fewer classes.
- */
-const buildScale = (
-    statsByPeriod: Map<string, Map<string, OrgUnitStats>>
-): Scale | null => {
-    const medians: number[] = []
-    for (const perOrgUnit of statsByPeriod.values()) {
-        for (const stats of perOrgUnit.values()) {
-            medians.push(stats.median)
-        }
-    }
-    if (medians.length === 0) {
-        return null
-    }
-    medians.sort((a, b) => a - b)
-    const min = medians[0]
-    const max = medians[medians.length - 1]
-    const bounds = [min]
-    for (let i = 1; i < CLASS_COLORS.length; i++) {
-        const quantile =
-            medians[
-                Math.min(
-                    medians.length - 1,
-                    Math.floor((i / CLASS_COLORS.length) * medians.length)
-                )
-            ]
-        if (quantile > bounds[bounds.length - 1] && quantile < max) {
-            bounds.push(quantile)
-        }
-    }
-    if (max > bounds[bounds.length - 1]) {
-        bounds.push(max)
-    }
-    const classCount = Math.max(1, bounds.length - 1)
-    if (bounds.length === 1) {
-        bounds.push(min)
-    }
-    const colors =
-        classCount === 1
-            ? [CLASS_COLORS[2]]
-            : Array.from(
-                  { length: classCount },
-                  (_, i) =>
-                      CLASS_COLORS[
-                          Math.round(
-                              (i * (CLASS_COLORS.length - 1)) / (classCount - 1)
-                          )
-                      ]
-              )
-    return { bounds, colors }
+const formatRatio = (ratio: number): string => `${Math.round(ratio * 10) / 10}×`
+
+const formatBreak = (index: number): string => {
+    const lower = RATIO_BREAKS[index]
+    const upper = RATIO_BREAKS[index + 1]
+    return upper === undefined
+        ? i18n.t('{{lower}}× or more', { lower })
+        : i18n.t('{{lower}}–{{upper}}×', { lower, upper })
 }
 
-const colorFor = (value: number, scale: Scale): string => {
-    let index = 0
-    for (let i = 1; i < scale.bounds.length - 1; i++) {
-        if (value >= scale.bounds[i]) {
-            index = i
-        }
-    }
-    return scale.colors[Math.min(index, scale.colors.length - 1)]
-}
-
-const buildLegendRows = (scale: Scale, showNoData: boolean): MapLegendRow[] => {
-    const rows = scale.colors.map((color, index) => ({
+const buildLegendRows = (present: Set<ExceedanceStatus>): MapLegendRow[] => {
+    const rows: MapLegendRow[] = RATIO_COLORS.map((color, index) => ({
         color,
-        label:
-            scale.bounds[index] === scale.bounds[index + 1]
-                ? formatValue(scale.bounds[index])
-                : `${formatValue(scale.bounds[index])} – ${formatValue(
-                      scale.bounds[index + 1]
-                  )}`,
+        label: formatBreak(index),
     }))
-    return showNoData
-        ? [...rows, { color: MAP_NO_DATA_COLOR, label: i18n.t('No data') }]
-        : rows
+    if (present.has('possible')) {
+        rows.push({
+            color: POSSIBLE_COLOR,
+            label: i18n.t('Possible (80% interval crosses)'),
+        })
+    }
+    if (present.has('below')) {
+        rows.push({ color: BELOW_COLOR, label: i18n.t('Below threshold') })
+    }
+    if (present.has('no-threshold')) {
+        rows.push({
+            color: NO_THRESHOLD_COLOR,
+            label: i18n.t('No threshold (too little history)'),
+        })
+    }
+    if (present.has('no-prediction')) {
+        rows.push({
+            color: NO_PREDICTION_COLOR,
+            label: i18n.t('No prediction'),
+        })
+    }
+    return rows
+}
+
+const STATUS_HEADLINES: Record<ExceedanceStatus, string> = {
+    above: i18n.t('Above the endemic threshold'),
+    possible: i18n.t('Possible outbreak'),
+    below: i18n.t('Below the endemic threshold'),
+    'no-threshold': i18n.t('No threshold available'),
+    'no-prediction': i18n.t('No prediction for this period'),
 }
 
 const renderPopup = (properties: GeoJsonProperties): HTMLElement => {
     const title = String(properties?.name ?? '')
-    if (typeof properties?.median !== 'number') {
-        return createMapPopup(title, [
-            { text: i18n.t('No prediction for this period') },
-        ])
-    }
+    const status = String(properties?.status ?? '') as ExceedanceStatus
     const rows: MapPopupRow[] = [
-        {
-            text: i18n.t('Median: {{value}} cases', {
-                value: formatValue(properties.median),
-            }),
-        },
+        { text: STATUS_HEADLINES[status] ?? STATUS_HEADLINES['no-prediction'] },
     ]
-    if (
-        typeof properties.low === 'number' &&
-        typeof properties.high === 'number'
-    ) {
+
+    if (typeof properties?.median === 'number') {
         rows.push({
-            text: i18n.t('80% interval: {{low}} – {{high}}', {
-                low: formatValue(properties.low),
-                high: formatValue(properties.high),
+            text:
+                typeof properties.ratio === 'number'
+                    ? i18n.t(
+                          'Predicted {{value}} cases ({{ratio}} threshold)',
+                          {
+                              value: formatValue(properties.median),
+                              ratio: formatRatio(properties.ratio),
+                          }
+                      )
+                    : i18n.t('Predicted {{value}} cases', {
+                          value: formatValue(properties.median),
+                      }),
+        })
+        if (
+            typeof properties.low === 'number' &&
+            typeof properties.high === 'number'
+        ) {
+            rows.push({
+                text: i18n.t('80% interval: {{low}} – {{high}}', {
+                    low: formatValue(properties.low),
+                    high: formatValue(properties.high),
+                }),
+                muted: true,
+            })
+        }
+    }
+    if (typeof properties?.threshold === 'number') {
+        rows.push({
+            text: i18n.t('Threshold: {{value}} cases', {
+                value: formatValue(properties.threshold),
             }),
             muted: true,
         })
     }
+
     return createMapPopup(title, rows)
 }
 
+/**
+ * Maps a prediction's org units against their endemic threshold: red where the
+ * predicted median crosses it, deepening with the multiple by which it does.
+ * Thresholds come from CHAP's own threshold endpoint, using the modeling app's
+ * strategies and defaults, so the map agrees with its prediction charts.
+ */
 export const WidgetView = ({ config }: { config: Config }) => {
     const predictionsQuery = useQuery({
         queryKey: ['chap', 'predictions'],
@@ -181,6 +195,15 @@ export const WidgetView = ({ config }: { config: Config }) => {
     })
     const entries = entriesQuery.data
 
+    const statsByPeriod = useMemo(
+        () => buildStatsByPeriod(entries ?? []),
+        [entries]
+    )
+    const periods = useMemo(
+        () => buildChartPeriods((entries ?? []).map((entry) => entry.period)),
+        [entries]
+    )
+
     const orgUnitIds = useMemo(() => {
         const ids = new Set<string>(
             prediction?.orgUnits ?? prediction?.dataset.orgUnits ?? []
@@ -192,15 +215,39 @@ export const WidgetView = ({ config }: { config: Config }) => {
     }, [prediction, entries])
     const geometriesQuery = useOrgUnitGeometryContext(orgUnitIds)
 
-    const statsByPeriod = useMemo(
-        () => buildStatsByPeriod(entries ?? []),
-        [entries]
+    // Thresholds are per (org unit, period), computed from the prediction's own
+    // dataset history — so they are requested for exactly the periods and org
+    // units the map draws.
+    const datasetId = prediction?.datasetId
+    const thresholdsQuery = useQuery({
+        queryKey: [
+            'chap',
+            'thresholds',
+            datasetId,
+            periods,
+            orgUnitIds,
+            config.threshold,
+        ],
+        enabled:
+            datasetId !== undefined &&
+            periods.length > 0 &&
+            orgUnitIds.length > 0,
+        queryFn: () =>
+            DatasetsService.computeThresholdsV1AnalyticsThresholdsPost({
+                datasetId: datasetId as number,
+                periodIds: periods,
+                locations: orgUnitIds,
+                params: config.threshold,
+            }),
+        staleTime: 30 * 60 * 1000,
+    })
+    const thresholds = useMemo(
+        () =>
+            thresholdsQuery.data
+                ? buildThresholdMap(thresholdsQuery.data)
+                : undefined,
+        [thresholdsQuery.data]
     )
-    const periods = useMemo(
-        () => buildChartPeriods((entries ?? []).map((entry) => entry.period)),
-        [entries]
-    )
-    const scale = useMemo(() => buildScale(statsByPeriod), [statsByPeriod])
 
     const [periodIndex, setPeriodIndex] = useState(0)
     useEffect(() => {
@@ -214,30 +261,48 @@ export const WidgetView = ({ config }: { config: Config }) => {
 
     const features = geometriesQuery.data?.features
     const contextFeature = geometriesQuery.data?.contextFeature
-    const featureCollection = useMemo<FeatureCollection>(
-        () => ({
+    const { featureCollection, statuses, aboveCount } = useMemo(() => {
+        const canonicalPeriod = activePeriod
+            ? canonicalizePeriodId(activePeriod)
+            : undefined
+        const present = new Set<ExceedanceStatus>()
+        let above = 0
+        const collection: FeatureCollection = {
             type: 'FeatureCollection',
             features: (features ?? []).map((feature) => {
                 const stats = activeStats?.get(feature.id)
+                const threshold =
+                    canonicalPeriod === undefined
+                        ? undefined
+                        : thresholds?.get(feature.id)?.get(canonicalPeriod)
+                const exceedance = classifyExceedance(stats, threshold)
+                present.add(exceedance.status)
+                if (exceedance.status === 'above') {
+                    above++
+                }
                 return {
                     type: 'Feature' as const,
                     id: feature.id,
                     geometry: feature.geometry as unknown as Geometry,
                     properties: {
                         ...feature.properties,
-                        color:
-                            stats && scale
-                                ? colorFor(stats.median, scale)
-                                : MAP_NO_DATA_COLOR,
+                        color: colorFor(exceedance),
+                        status: exceedance.status,
+                        ratio: exceedance.ratio,
+                        threshold: threshold ?? null,
                         median: stats?.median ?? null,
                         low: stats?.low ?? null,
                         high: stats?.high ?? null,
                     },
                 }
             }),
-        }),
-        [features, activeStats, scale]
-    )
+        }
+        return {
+            featureCollection: collection,
+            statuses: present,
+            aboveCount: above,
+        }
+    }, [features, activeStats, activePeriod, thresholds])
 
     if (predictionsQuery.isLoading) {
         return <LoadingState />
@@ -268,6 +333,7 @@ export const WidgetView = ({ config }: { config: Config }) => {
     }
     if (
         entriesQuery.isLoading ||
+        thresholdsQuery.isLoading ||
         (orgUnitIds.length > 0 && geometriesQuery.isLoading)
     ) {
         return <LoadingState />
@@ -277,6 +343,15 @@ export const WidgetView = ({ config }: { config: Config }) => {
             <ErrorState title={i18n.t('Could not load prediction')}>
                 {i18n.t(
                     'Fetching the prediction from the CHAP backend failed. It may have been deleted.'
+                )}
+            </ErrorState>
+        )
+    }
+    if (thresholdsQuery.isError) {
+        return (
+            <ErrorState title={i18n.t('Could not compute thresholds')}>
+                {i18n.t(
+                    'CHAP could not compute endemic thresholds for this prediction’s dataset. It needs historical disease cases to compare against.'
                 )}
             </ErrorState>
         )
@@ -307,15 +382,18 @@ export const WidgetView = ({ config }: { config: Config }) => {
         )
     }
 
-    const missingData = (features ?? []).some(
-        (feature) => !activeStats?.has(feature.id)
-    )
-
     return (
         <div className={styles.view}>
             <div className={styles.header}>
-                <div className={styles.subtitle} title={prediction.name}>
-                    {prediction.name} · {prediction.modelId}
+                <div className={styles.subtitle}>
+                    <span title={prediction.name}>
+                        {i18n.t('{{count}} above threshold', {
+                            count: aboveCount,
+                        })}
+                    </span>
+                    <span className={styles.thresholdNote}>
+                        {describeThresholdParams(config.threshold)}
+                    </span>
                 </div>
                 <div className={styles.periodNav}>
                     <Button
@@ -359,12 +437,10 @@ export const WidgetView = ({ config }: { config: Config }) => {
                         {contextFeature.properties.name}
                     </div>
                 )}
-                {scale && (
-                    <MapLegend
-                        title={i18n.t('Predicted cases (median)')}
-                        rows={buildLegendRows(scale, missingData)}
-                    />
-                )}
+                <MapLegend
+                    title={i18n.t('Above threshold (× threshold)')}
+                    rows={buildLegendRows(statuses)}
+                />
             </div>
         </div>
     )

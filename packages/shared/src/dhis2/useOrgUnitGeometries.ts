@@ -20,33 +20,80 @@ export type OrgUnitFeature = {
     properties: { id: string; name: string }
 }
 
+export type OrgUnitGeometryContext = {
+    features: OrgUnitFeature[]
+    /** Deepest geometry-bearing ancestor shared by every returned org unit */
+    contextFeature?: OrgUnitFeature
+}
+
+type OrgUnitAncestor = {
+    id: string
+    displayName: string
+    level: number
+    geometry?: OrgUnitGeometry
+}
+
+type OrgUnitWithGeometry = {
+    id: string
+    displayName: string
+    geometry?: OrgUnitGeometry
+    ancestors?: OrgUnitAncestor[]
+}
+
 type OrgUnitResponse = {
     orgUnits: {
-        organisationUnits: Array<{
-            id: string
-            displayName: string
-            geometry?: OrgUnitGeometry
-        }>
+        organisationUnits: OrgUnitWithGeometry[]
     }
 }
 
 const CHUNK_SIZE = 100
 
-/**
- * Fetches GeoJSON features (id, name, geometry) for org unit ids (as used in
- * CHAP entries) via the DHIS2 metadata API. Org units without geometry are
- * omitted from the result — callers decide how to surface the gap.
- */
-export const useOrgUnitGeometries = (orgUnitIds: string[]) => {
+const toFeature = ({
+    id,
+    displayName,
+    geometry,
+}: OrgUnitAncestor | OrgUnitWithGeometry): OrgUnitFeature | undefined =>
+    geometry
+        ? {
+              type: 'Feature',
+              id,
+              geometry,
+              properties: { id, name: displayName },
+          }
+        : undefined
+
+const findCommonContext = (
+    orgUnits: OrgUnitWithGeometry[]
+): OrgUnitFeature | undefined => {
+    const [first, ...rest] = orgUnits
+    if (!first) {
+        return undefined
+    }
+    const commonAncestor = (first.ancestors ?? [])
+        .filter(
+            (candidate) =>
+                candidate.geometry &&
+                rest.every((orgUnit) =>
+                    orgUnit.ancestors?.some(
+                        (ancestor) => ancestor.id === candidate.id
+                    )
+                )
+        )
+        .sort((a, b) => b.level - a.level)[0]
+
+    return commonAncestor ? toFeature(commonAncestor) : undefined
+}
+
+const useOrgUnitGeometryQuery = (orgUnitIds: string[]) => {
     const engine = useDataEngine()
     const ids = Array.from(new Set(orgUnitIds)).sort()
 
-    return useQuery<OrgUnitFeature[]>({
+    return useQuery<OrgUnitGeometryContext>({
         queryKey: ['dhis2', 'orgUnitGeometries', ids],
         enabled: ids.length > 0,
         staleTime: Infinity,
         queryFn: async () => {
-            const features: OrgUnitFeature[] = []
+            const orgUnits: OrgUnitWithGeometry[] = []
             for (let start = 0; start < ids.length; start += CHUNK_SIZE) {
                 const chunk = ids.slice(start, start + CHUNK_SIZE)
                 const response = (await engine.query({
@@ -54,27 +101,37 @@ export const useOrgUnitGeometries = (orgUnitIds: string[]) => {
                         resource: 'organisationUnits',
                         params: {
                             filter: `id:in:[${chunk.join(',')}]`,
-                            fields: 'id,displayName,geometry',
-                            paging: 'false',
+                            fields: 'id,displayName,geometry,ancestors[id,displayName,level,geometry]',
+                            pageSize: CHUNK_SIZE,
                         },
                     },
                 })) as OrgUnitResponse
-                for (const orgUnit of response.orgUnits.organisationUnits) {
-                    if (!orgUnit.geometry) {
-                        continue
-                    }
-                    features.push({
-                        type: 'Feature',
-                        id: orgUnit.id,
-                        geometry: orgUnit.geometry,
-                        properties: {
-                            id: orgUnit.id,
-                            name: orgUnit.displayName,
-                        },
-                    })
-                }
+                orgUnits.push(...response.orgUnits.organisationUnits)
             }
-            return features
+            return {
+                features: orgUnits
+                    .map(toFeature)
+                    .filter((feature): feature is OrgUnitFeature => !!feature),
+                contextFeature: findCommonContext(orgUnits),
+            }
         },
     })
+}
+
+/**
+ * Fetches GeoJSON features for org unit ids plus the deepest ancestor shared
+ * by all of them. The ancestor gives maps geographic context when a
+ * prediction covers only part of a country or region.
+ */
+export const useOrgUnitGeometryContext = (orgUnitIds: string[]) =>
+    useOrgUnitGeometryQuery(orgUnitIds)
+
+/**
+ * Fetches GeoJSON features (id, name, geometry) for org unit ids (as used in
+ * CHAP entries) via the DHIS2 metadata API. Org units without geometry are
+ * omitted from the result — callers decide how to surface the gap.
+ */
+export const useOrgUnitGeometries = (orgUnitIds: string[]) => {
+    const { data, ...query } = useOrgUnitGeometryQuery(orgUnitIds)
+    return { ...query, data: data?.features }
 }

@@ -85,6 +85,26 @@
                 "showBasemap": true,
                 "predictionId": "latest"
             }
+        },
+        {
+            "id": "f5Nnb7lC1mu",
+            "widget": "outbreak-map",
+            "layout": {
+                "x": 29,
+                "y": 43,
+                "w": 31,
+                "h": 26
+            },
+            "config": {
+                "widget": "chap-widget-outbreak-map",
+                "version": 1,
+                "predictionId": "latest",
+                "showBasemap": true,
+                "threshold": {
+                    "type": "seasonal",
+                    "stdMultiplier": 2
+                }
+            }
         }
     ]
 }

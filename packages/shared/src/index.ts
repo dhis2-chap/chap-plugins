@@ -5,6 +5,8 @@ export { enableQueue, disableQueue, getQueue } from './chap-api/core/request'
 // CHAP route plumbing
 export { ChapProvider } from './chap/ChapProvider'
 export { ChapGuard, useChapSystemInfo } from './chap/ChapGuard'
+export { buildThresholdMap, getThresholdLineRoles } from './chap/thresholds'
+export type { ThresholdLineRoles, ThresholdMap } from './chap/thresholds'
 
 // Dashboard plugin shell
 export type { DashboardPluginProps } from './plugin/types'
@@ -23,17 +25,29 @@ export { isDhis2NotFound } from './config/dhis2Error'
 
 // DHIS2 metadata helpers
 export { useOrgUnitNames } from './dhis2/useOrgUnitNames'
-export { useOrgUnitGeometries } from './dhis2/useOrgUnitGeometries'
+export {
+    useOrgUnitGeometries,
+    useOrgUnitGeometryContext,
+} from './dhis2/useOrgUnitGeometries'
 export type {
     OrgUnitFeature,
     OrgUnitGeometry,
+    OrgUnitGeometryContext,
 } from './dhis2/useOrgUnitGeometries'
 
 // Charts
 export { FanChart } from './charts/FanChart'
 export type { FanChartProps } from './charts/FanChart'
-export { buildFanChartData, STANDARD_QUANTILES } from './charts/quantiles'
-export type { FanChartData, QuantileEntry } from './charts/quantiles'
+export {
+    buildFanChartData,
+    buildStatsByPeriod,
+    STANDARD_QUANTILES,
+} from './charts/quantiles'
+export type {
+    FanChartData,
+    OrgUnitStats,
+    QuantileEntry,
+} from './charts/quantiles'
 export {
     buildChartPeriods,
     canonicalizePeriodId,

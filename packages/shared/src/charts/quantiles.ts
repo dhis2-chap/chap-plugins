@@ -1,5 +1,6 @@
 import type { DataElement } from '../chap-api'
-import { buildChartPeriods, comparePeriods } from './periods'
+// Explicit extension so `node --test` can load this module's tests directly
+import { buildChartPeriods, comparePeriods } from './periods.ts'
 
 /** The quantiles every widget requests — matches the modeling app */
 export const STANDARD_QUANTILES = [0.1, 0.25, 0.5, 0.75, 0.9]
@@ -10,6 +11,16 @@ export type QuantileEntry = {
     period: string
     quantile: number
     value: number
+}
+
+/** The predicted median and 80% interval for one org unit and period */
+export type OrgUnitStats = {
+    /** 0.5 quantile */
+    median: number
+    /** 0.1 quantile, falling back to the median when it was not requested */
+    low: number
+    /** 0.9 quantile, falling back to the median when it was not requested */
+    high: number
 }
 
 export type FanChartData = {
@@ -109,4 +120,47 @@ export const buildFanChartData = ({
         ]),
         actuals: periods.map((period) => actualsByPeriod.get(period) ?? null),
     }
+}
+
+/**
+ * Index flat quantile entries as period → org unit → median and interval —
+ * the shape a map or table needs, where a fan chart needs one org unit across
+ * every period. Org units without a median are left out: there is nothing to
+ * draw for them.
+ */
+export const buildStatsByPeriod = (
+    entries: QuantileEntry[]
+): Map<string, Map<string, OrgUnitStats>> => {
+    const raw = new Map<string, Map<string, Map<string, number>>>()
+    for (const entry of entries) {
+        let perOrgUnit = raw.get(entry.period)
+        if (!perOrgUnit) {
+            perOrgUnit = new Map()
+            raw.set(entry.period, perOrgUnit)
+        }
+        let perQuantile = perOrgUnit.get(entry.orgUnit)
+        if (!perQuantile) {
+            perQuantile = new Map()
+            perOrgUnit.set(entry.orgUnit, perQuantile)
+        }
+        perQuantile.set(quantileKey(entry.quantile), entry.value)
+    }
+
+    const stats = new Map<string, Map<string, OrgUnitStats>>()
+    for (const [period, perOrgUnit] of raw) {
+        const perOrgUnitStats = new Map<string, OrgUnitStats>()
+        for (const [orgUnit, perQuantile] of perOrgUnit) {
+            const median = perQuantile.get(quantileKey(0.5))
+            if (median === undefined) {
+                continue
+            }
+            perOrgUnitStats.set(orgUnit, {
+                median,
+                low: perQuantile.get(quantileKey(0.1)) ?? median,
+                high: perQuantile.get(quantileKey(0.9)) ?? median,
+            })
+        }
+        stats.set(period, perOrgUnitStats)
+    }
+    return stats
 }
