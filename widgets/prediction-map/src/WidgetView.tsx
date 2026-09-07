@@ -1,6 +1,6 @@
 import {
     PredictionsService,
-    useOrgUnitGeometries,
+    useOrgUnitGeometryContext,
     LoadingState,
     PassiveState,
     ErrorState,
@@ -9,23 +9,19 @@ import {
     formatPeriodLabel,
     type PredictionEntry,
 } from '@chap-widgets/shared'
+import {
+    ChoroplethMap,
+    MapLegend,
+    createMapPopup,
+    MAP_NO_DATA_COLOR,
+    type MapLegendRow,
+    type MapPopupRow,
+} from '@chap-widgets/shared/maps'
 import i18n from '@dhis2/d2-i18n'
 import { Button, IconChevronLeft16, IconChevronRight16 } from '@dhis2/ui'
 import { useQuery } from '@tanstack/react-query'
-import type { FeatureCollection, Geometry } from 'geojson'
-import {
-    LngLatBounds,
-    Map as MaplibreMap,
-    NavigationControl,
-    Popup,
-    setWorkerUrl,
-    type GeoJSONSource,
-    type MapLayerMouseEvent,
-    type StyleSpecification,
-} from 'maplibre-gl'
-import 'maplibre-gl/dist/maplibre-gl.css'
-import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import type { FeatureCollection, GeoJsonProperties, Geometry } from 'geojson'
+import React, { useEffect, useMemo, useState } from 'react'
 import { type Config } from './config'
 import styles from './WidgetView.module.css'
 
@@ -33,14 +29,7 @@ import styles from './WidgetView.module.css'
  * Sequential single-hue ramp (light → dark = fewer → more predicted cases).
  * 5 steps, colorblind-safe and monotone in lightness on a light surface.
  */
-// MapLibre resolves its worker as `maplibre-gl-worker.mjs` next to the main
-// module at runtime — a file no bundler emits (silent 404, GeoJSON sources
-// then never finish loading). Point it at the vite-bundled worker instead.
-setWorkerUrl(maplibreWorkerUrl)
-
 const CLASS_COLORS = ['#86b6ef', '#5598e7', '#2a78d6', '#1c5cab', '#0d366b']
-const NO_DATA_COLOR = '#d9d7d2'
-const SOURCE_ID = 'org-units'
 
 type OrgUnitStats = { median: number; low: number; high: number }
 /** `bounds` has one more entry than `colors`; class i covers bounds[i]..bounds[i+1] */
@@ -151,243 +140,49 @@ const colorFor = (value: number, scale: Scale): string => {
     return scale.colors[Math.min(index, scale.colors.length - 1)]
 }
 
-const buildMapStyle = (showBasemap: boolean): StyleSpecification =>
-    showBasemap
-        ? {
-              version: 8,
-              sources: {
-                  osm: {
-                      type: 'raster',
-                      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-                      tileSize: 256,
-                      maxzoom: 19,
-                      attribution: '© OpenStreetMap contributors',
-                  },
-              },
-              layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
-          }
-        : {
-              version: 8,
-              sources: {},
-              layers: [
-                  {
-                      id: 'background',
-                      type: 'background',
-                      paint: { 'background-color': '#f3f2ef' },
-                  },
-              ],
-          }
-
-const extendBounds = (bounds: LngLatBounds, coordinates: unknown) => {
-    if (!Array.isArray(coordinates) || coordinates.length === 0) {
-        return
-    }
-    if (typeof coordinates[0] === 'number') {
-        bounds.extend([coordinates[0] as number, coordinates[1] as number])
-        return
-    }
-    for (const nested of coordinates) {
-        extendBounds(bounds, nested)
-    }
+const buildLegendRows = (scale: Scale, showNoData: boolean): MapLegendRow[] => {
+    const rows = scale.colors.map((color, index) => ({
+        color,
+        label:
+            scale.bounds[index] === scale.bounds[index + 1]
+                ? formatValue(scale.bounds[index])
+                : `${formatValue(scale.bounds[index])} – ${formatValue(
+                      scale.bounds[index + 1]
+                  )}`,
+    }))
+    return showNoData
+        ? [...rows, { color: MAP_NO_DATA_COLOR, label: i18n.t('No data') }]
+        : rows
 }
 
-const buildPopupContent = (
-    properties: Record<string, unknown>
-): HTMLElement => {
-    const root = document.createElement('div')
-    root.className = styles.popup
-    const title = document.createElement('div')
-    title.className = styles.popupTitle
-    title.textContent = String(properties.name ?? '')
-    root.appendChild(title)
-    if (typeof properties.median === 'number') {
-        const median = document.createElement('div')
-        median.textContent = i18n.t('Median: {{value}} cases', {
-            value: formatValue(properties.median),
-        })
-        root.appendChild(median)
-        if (
-            typeof properties.low === 'number' &&
-            typeof properties.high === 'number'
-        ) {
-            const range = document.createElement('div')
-            range.className = styles.popupRange
-            range.textContent = i18n.t('80% interval: {{low}} – {{high}}', {
+const renderPopup = (properties: GeoJsonProperties): HTMLElement => {
+    const title = String(properties?.name ?? '')
+    if (typeof properties?.median !== 'number') {
+        return createMapPopup(title, [
+            { text: i18n.t('No prediction for this period') },
+        ])
+    }
+    const rows: MapPopupRow[] = [
+        {
+            text: i18n.t('Median: {{value}} cases', {
+                value: formatValue(properties.median),
+            }),
+        },
+    ]
+    if (
+        typeof properties.low === 'number' &&
+        typeof properties.high === 'number'
+    ) {
+        rows.push({
+            text: i18n.t('80% interval: {{low}} – {{high}}', {
                 low: formatValue(properties.low),
                 high: formatValue(properties.high),
-            })
-            root.appendChild(range)
-        }
-    } else {
-        const empty = document.createElement('div')
-        empty.textContent = i18n.t('No prediction for this period')
-        root.appendChild(empty)
-    }
-    return root
-}
-
-const addChoroplethLayers = (map: MaplibreMap) => {
-    map.addLayer({
-        id: 'org-unit-fills',
-        type: 'fill',
-        source: SOURCE_ID,
-        filter: ['==', ['geometry-type'], 'Polygon'],
-        paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.8 },
-    })
-    map.addLayer({
-        id: 'org-unit-outlines',
-        type: 'line',
-        source: SOURCE_ID,
-        filter: ['==', ['geometry-type'], 'Polygon'],
-        paint: { 'line-color': '#ffffff', 'line-width': 1 },
-    })
-    map.addLayer({
-        id: 'org-unit-points',
-        type: 'circle',
-        source: SOURCE_ID,
-        filter: ['==', ['geometry-type'], 'Point'],
-        paint: {
-            'circle-color': ['get', 'color'],
-            'circle-radius': 6,
-            'circle-stroke-color': '#ffffff',
-            'circle-stroke-width': 1.5,
-        },
-    })
-
-    const popup = new Popup({
-        closeButton: false,
-        closeOnClick: false,
-        maxWidth: '260px',
-    })
-    for (const layerId of ['org-unit-fills', 'org-unit-points']) {
-        map.on('mousemove', layerId, (event: MapLayerMouseEvent) => {
-            const feature = event.features?.[0]
-            if (!feature) {
-                return
-            }
-            map.getCanvas().style.cursor = 'pointer'
-            popup
-                .setLngLat(event.lngLat)
-                .setDOMContent(buildPopupContent(feature.properties))
-                .addTo(map)
-        })
-        map.on('mouseleave', layerId, () => {
-            map.getCanvas().style.cursor = ''
-            popup.remove()
+            }),
+            muted: true,
         })
     }
+    return createMapPopup(title, rows)
 }
-
-const PredictionMap = ({
-    featureCollection,
-    showBasemap,
-}: {
-    featureCollection: FeatureCollection
-    showBasemap: boolean
-}) => {
-    const containerRef = useRef<HTMLDivElement | null>(null)
-    const mapRef = useRef<MaplibreMap | null>(null)
-    const fittedRef = useRef<string | null>(null)
-    const [mapReady, setMapReady] = useState(false)
-
-    useEffect(() => {
-        const container = containerRef.current
-        if (!container) {
-            return
-        }
-        const map = new MaplibreMap({
-            container,
-            style: buildMapStyle(showBasemap),
-            attributionControl: showBasemap ? { compact: true } : false,
-            dragRotate: false,
-        })
-        map.addControl(
-            new NavigationControl({ showCompass: false }),
-            'top-right'
-        )
-        map.on('load', () => setMapReady(true))
-        mapRef.current = map
-        fittedRef.current = null
-        return () => {
-            mapRef.current = null
-            setMapReady(false)
-            map.remove()
-        }
-    }, [showBasemap])
-
-    useEffect(() => {
-        const map = mapRef.current
-        if (!map || !mapReady) {
-            return
-        }
-        const source = map.getSource(SOURCE_ID) as GeoJSONSource | undefined
-        if (source) {
-            source.setData(featureCollection)
-        } else {
-            map.addSource(SOURCE_ID, {
-                type: 'geojson',
-                data: featureCollection,
-            })
-            addChoroplethLayers(map)
-        }
-        // Fit once per distinct set of org units (not on every period step)
-        const signature = featureCollection.features
-            .map((feature) => String(feature.id))
-            .join(',')
-        if (signature && fittedRef.current !== signature) {
-            fittedRef.current = signature
-            const bounds = new LngLatBounds()
-            for (const feature of featureCollection.features) {
-                extendBounds(
-                    bounds,
-                    'coordinates' in feature.geometry
-                        ? feature.geometry.coordinates
-                        : undefined
-                )
-            }
-            if (!bounds.isEmpty()) {
-                map.fitBounds(bounds, { padding: 24, duration: 0, maxZoom: 9 })
-            }
-        }
-    }, [featureCollection, mapReady])
-
-    return <div ref={containerRef} className={styles.map} />
-}
-
-const Legend = ({
-    scale,
-    showNoData,
-}: {
-    scale: Scale
-    showNoData: boolean
-}) => (
-    <div className={styles.legend}>
-        <div className={styles.legendTitle}>
-            {i18n.t('Predicted cases (median)')}
-        </div>
-        {scale.colors.map((color, index) => (
-            <div key={index} className={styles.legendRow}>
-                <span className={styles.swatch} style={{ background: color }} />
-                <span>
-                    {scale.bounds[index] === scale.bounds[index + 1]
-                        ? formatValue(scale.bounds[index])
-                        : `${formatValue(scale.bounds[index])} – ${formatValue(
-                              scale.bounds[index + 1]
-                          )}`}
-                </span>
-            </div>
-        ))}
-        {showNoData && (
-            <div className={styles.legendRow}>
-                <span
-                    className={styles.swatch}
-                    style={{ background: NO_DATA_COLOR }}
-                />
-                <span>{i18n.t('No data')}</span>
-            </div>
-        )}
-    </div>
-)
 
 export const WidgetView = ({ config }: { config: Config }) => {
     const predictionsQuery = useQuery({
@@ -430,7 +225,7 @@ export const WidgetView = ({ config }: { config: Config }) => {
         }
         return Array.from(ids)
     }, [prediction, entries])
-    const geometriesQuery = useOrgUnitGeometries(orgUnitIds)
+    const geometriesQuery = useOrgUnitGeometryContext(orgUnitIds)
 
     const statsByPeriod = useMemo(
         () => buildStatsByPeriod(entries ?? []),
@@ -452,7 +247,8 @@ export const WidgetView = ({ config }: { config: Config }) => {
         ? statsByPeriod.get(activePeriod)
         : undefined
 
-    const features = geometriesQuery.data
+    const features = geometriesQuery.data?.features
+    const contextFeature = geometriesQuery.data?.contextFeature
     const featureCollection = useMemo<FeatureCollection>(
         () => ({
             type: 'FeatureCollection',
@@ -467,7 +263,7 @@ export const WidgetView = ({ config }: { config: Config }) => {
                         color:
                             stats && scale
                                 ? colorFor(stats.median, scale)
-                                : NO_DATA_COLOR,
+                                : MAP_NO_DATA_COLOR,
                         median: stats?.median ?? null,
                         low: stats?.low ?? null,
                         high: stats?.high ?? null,
@@ -579,11 +375,31 @@ export const WidgetView = ({ config }: { config: Config }) => {
                 </div>
             </div>
             <div className={styles.mapWrap}>
-                <PredictionMap
+                <ChoroplethMap
                     featureCollection={featureCollection}
+                    contextFeature={
+                        contextFeature
+                            ? {
+                                  ...contextFeature,
+                                  geometry:
+                                      contextFeature.geometry as unknown as Geometry,
+                              }
+                            : undefined
+                    }
                     showBasemap={config.showBasemap}
+                    renderPopup={renderPopup}
                 />
-                {scale && <Legend scale={scale} showNoData={missingData} />}
+                {contextFeature && (
+                    <div className={styles.contextLabel}>
+                        {contextFeature.properties.name}
+                    </div>
+                )}
+                {scale && (
+                    <MapLegend
+                        title={i18n.t('Predicted cases (median)')}
+                        rows={buildLegendRows(scale, missingData)}
+                    />
+                )}
             </div>
         </div>
     )

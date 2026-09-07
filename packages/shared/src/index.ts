@@ -36,6 +36,7 @@ export { buildFanChartData, STANDARD_QUANTILES } from './charts/quantiles'
 export type { FanChartData, QuantileEntry } from './charts/quantiles'
 export {
     buildChartPeriods,
+    canonicalizePeriodId,
     comparePeriods,
     formatPeriodLabel,
 } from './charts/periods'

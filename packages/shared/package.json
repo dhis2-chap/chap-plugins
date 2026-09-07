@@ -1,11 +1,15 @@
 {
     "name": "@chap-widgets/shared",
     "version": "1.0.0",
-    "description": "Shared building blocks for CHAP dashboard widgets: CHAP API client, plugin shell, config persistence, charts",
+    "description": "Shared building blocks for CHAP dashboard widgets: CHAP API client, plugin shell, config persistence, charts, maps",
     "license": "BSD-3-Clause",
     "private": true,
     "main": "src/index.ts",
     "types": "src/index.ts",
+    "exports": {
+        ".": "./src/index.ts",
+        "./maps": "./src/maps/index.ts"
+    },
     "scripts": {
         "tsc:check": "tsc --noEmit"
     },
@@ -16,12 +20,15 @@
         "@tanstack/react-query": "^4.36.1",
         "highcharts": "11.4.8",
         "highcharts-react-official": "^3.2.1",
+        "maplibre-gl": "^6.6.0",
         "p-queue": "^8.1.0",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
         "zod": "^3.23.8"
     },
     "devDependencies": {
+        "@types/geojson": "^7946.0.16",
+        "@types/node": "^22.18.0",
         "@types/react": "^18.3.12",
         "@types/react-dom": "^18.3.1",
         "typescript": "^5.9.3"

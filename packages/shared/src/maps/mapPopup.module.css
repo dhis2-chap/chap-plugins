@@ -1,0 +1,12 @@
+.popup {
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.popupTitle {
+    font-weight: 600;
+}
+
+.popupMuted {
+    color: var(--colors-grey700);
+}

@@ -12,7 +12,7 @@
         "lint": "eslint . && prettier -c .",
         "format": "prettier . -w",
         "tsc:check": "pnpm --recursive run tsc:check",
-        "test": "node --test 'scripts/**/*.test.mjs'",
+        "test": "node --test 'scripts/**/*.test.mjs' 'packages/**/*.test.ts' 'widgets/**/src/**/*.test.ts'",
         "verify": "pnpm run tsc:check && pnpm run lint && pnpm run test && pnpm run build",
         "deploy:local": "node scripts/deploy.mjs local",
         "deploy:demo": "node scripts/deploy.mjs demo",
