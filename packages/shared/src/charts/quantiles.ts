@@ -40,18 +40,26 @@ const quantileKey = (quantile: number) => quantile.toFixed(4)
  * Shapes flat quantile entries (and optional observed actual cases) for one
  * org unit into aligned FanChart series. Actual-case history is capped to the
  * `maxActualPeriods` observations leading into the forecast so old observations
- * don't dwarf it.
+ * don't dwarf it — unless `fullActualHistory` asks for the whole series.
  */
 export const buildFanChartData = ({
     entries,
     orgUnitId,
     actuals = [],
     maxActualPeriods = 12,
+    fullActualHistory = false,
 }: {
     entries: QuantileEntry[]
     orgUnitId: string
     actuals?: DataElement[]
     maxActualPeriods?: number
+    /**
+     * Span every observed period instead of a window around the forecast, so
+     * the x-axis stays put when the forecast moves along the series and only
+     * the prediction travels across it. What the modeling app's evaluation
+     * plots do.
+     */
+    fullActualHistory?: boolean
 }): FanChartData => {
     const quantilesByPeriod = new Map<string, Map<string, number>>()
     for (const entry of entries) {
@@ -77,22 +85,22 @@ export const buildFanChartData = ({
     // evaluation split with history from years later.
     const firstPrediction = predictionPeriods[0]
     const lastPrediction = predictionPeriods[predictionPeriods.length - 1]
-    const actualPeriods =
-        firstPrediction === undefined
-            ? allActualPeriods.slice(-maxActualPeriods)
-            : [
-                  ...allActualPeriods
-                      .filter(
-                          (period) =>
-                              comparePeriods(period, firstPrediction) < 0
-                      )
-                      .slice(-maxActualPeriods),
-                  ...allActualPeriods.filter(
-                      (period) =>
-                          comparePeriods(period, firstPrediction) >= 0 &&
-                          comparePeriods(period, lastPrediction) <= 0
-                  ),
-              ]
+    const actualPeriods = fullActualHistory
+        ? allActualPeriods
+        : firstPrediction === undefined
+          ? allActualPeriods.slice(-maxActualPeriods)
+          : [
+                ...allActualPeriods
+                    .filter(
+                        (period) => comparePeriods(period, firstPrediction) < 0
+                    )
+                    .slice(-maxActualPeriods),
+                ...allActualPeriods.filter(
+                    (period) =>
+                        comparePeriods(period, firstPrediction) >= 0 &&
+                        comparePeriods(period, lastPrediction) <= 0
+                ),
+            ]
 
     const inWindow = new Set(actualPeriods)
     const actualsByPeriod = new Map<string, number | null>()

@@ -25,8 +25,10 @@ const Y_AXIS_HEADROOM = 1.05
  * train/test split of a backtest — how well would the model have done.
  *
  * Every split is fetched up front so the slider can walk the forecast window
- * along the series without another round-trip per step, and the y-axis is
- * pinned across splits so only the data moves while scrubbing.
+ * along the series without another round-trip per step. Both axes are fixed —
+ * the x-axis spans the whole observed series and the y-axis is pinned across
+ * splits — so scrubbing moves the forecast across a stationary plot rather
+ * than redrawing it.
  */
 export const WidgetView = ({ config }: { config: Config }) => {
     const backtestQuery = useQuery({
@@ -120,6 +122,10 @@ export const WidgetView = ({ config }: { config: Config }) => {
                 entries: entriesBySplit.get(splitPeriods[renderedIndex]) ?? [],
                 orgUnitId: config.orgUnitId,
                 actuals: actualsQuery.data?.data ?? [],
+                // The axis spans the whole observed series, so scrubbing moves
+                // the forecast along a plot that stays put — as in the
+                // modeling app's evaluation comparison.
+                fullActualHistory: true,
             }),
         [
             entriesBySplit,

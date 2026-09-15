@@ -17,9 +17,13 @@ train/test split at a time, so you can watch each forecast land against the
 observed cases. Every split is fetched in one request and sliced client-side,
 so dragging costs no round-trips. The scrub position is view state only — it
 starts at `splitPeriod` and is never written back to the datastore, since
-dashboard viewers don't own the item's config. The y-axis is pinned across all
-splits so only the data moves while scrubbing. The slider is hidden when the
-backtest has just one split.
+dashboard viewers don't own the item's config.
+
+**The plot itself never moves.** The x-axis spans every observed period of the
+backtest and the y-axis is pinned across splits, so scrubbing slides the
+prediction — median line and bands — along a stationary chart of the actual
+cases, the way the modeling app's evaluation comparison behaves. The slider is
+hidden when the backtest has just one split.
 
 ## Config schema (`src/config.ts`)
 
