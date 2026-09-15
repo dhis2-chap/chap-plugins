@@ -19,6 +19,12 @@ so colors stay comparable while stepping through periods. Org units without
 geometry in DHIS2 are omitted; org units without a value for the shown
 period render in the "No data" gray.
 
+When all predicted org units share a geometry-bearing ancestor, the map draws
+that ancestor as a neutral geographic context and fits the viewport to it. A
+partial-country prediction therefore stays visibly located within its country
+instead of being presented as an isolated cluster. The ancestor's DHIS2
+`displayName` is shown on the map.
+
 ## Config schema (`src/config.ts`)
 
 | field          | type                       | meaning                                              |
@@ -35,8 +41,8 @@ period render in the "No data" gray.
 - `GET /v1/analytics/prediction-entry/{predictionId}?quantiles=0.1,0.25,0.5,0.75,0.9` — forecast quantiles for all org units
 
 Org unit geometry comes from the DHIS2 metadata API
-(`organisationUnits?fields=id,displayName,geometry` via
-`useOrgUnitGeometries` in `@chap-widgets/shared`), not from CHAP.
+(`organisationUnits?fields=id,displayName,geometry,ancestors[…]` via
+`useOrgUnitGeometryContext` in `@chap-widgets/shared`), not from CHAP.
 
 ## Files
 
