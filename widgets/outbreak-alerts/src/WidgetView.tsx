@@ -1,11 +1,16 @@
 import {
+    DatasetsService,
     PredictionsService,
     useOrgUnitNames,
+    buildChartPeriods,
+    buildThresholdMap,
+    canonicalizePeriodId,
+    describeThresholdParams,
     formatPeriodLabel,
     LoadingState,
     PassiveState,
     ErrorState,
-    type QuantileEntry,
+    useResolvedPredictionId,
 } from '@chap-widgets/shared'
 import i18n from '@dhis2/d2-i18n'
 import {
@@ -18,113 +23,143 @@ import {
     Tag,
 } from '@dhis2/ui'
 import { useQuery } from '@tanstack/react-query'
-import React from 'react'
+import React, { useMemo } from 'react'
+import { buildAlerts, type OrgUnitAlert } from './alerts'
 import { type Config } from './config'
 import styles from './WidgetView.module.css'
 
 const ALERT_QUANTILES = [0.5, 0.9]
 
-type OrgUnitAlert = {
-    orgUnitId: string
-    /** Highest predicted median across the forecast window */
-    peakMedian: number
-    /** Highest predicted 90th percentile across the forecast window */
-    peakUpper: number
-    /** Period in which the median peaks */
-    peakPeriod: string
-    level: 'high' | 'possible' | 'low'
-}
+const formatCases = (value: number): string =>
+    value < 10
+        ? String(Math.round(value * 10) / 10)
+        : Math.round(value).toLocaleString()
 
-const buildAlerts = (
-    entries: QuantileEntry[],
-    threshold: number
-): OrgUnitAlert[] => {
-    const byOrgUnit = new Map<string, QuantileEntry[]>()
-    for (const entry of entries) {
-        byOrgUnit.set(entry.orgUnit, [
-            ...(byOrgUnit.get(entry.orgUnit) ?? []),
-            entry,
-        ])
-    }
-
-    const alerts: OrgUnitAlert[] = []
-    for (const [orgUnitId, orgUnitEntries] of byOrgUnit) {
-        const medians = orgUnitEntries.filter((entry) => entry.quantile === 0.5)
-        const uppers = orgUnitEntries.filter((entry) => entry.quantile === 0.9)
-        if (medians.length === 0) {
-            continue
-        }
-        const peak = medians.reduce((max, entry) =>
-            entry.value > max.value ? entry : max
-        )
-        const peakUpper = uppers.reduce(
-            (max, entry) => Math.max(max, entry.value),
-            0
-        )
-        alerts.push({
-            orgUnitId,
-            peakMedian: peak.value,
-            peakUpper,
-            peakPeriod: peak.period,
-            level:
-                peak.value >= threshold
-                    ? 'high'
-                    : peakUpper >= threshold
-                      ? 'possible'
-                      : 'low',
-        })
-    }
-
-    return alerts.sort((a, b) => b.peakMedian - a.peakMedian)
-}
-
-const AlertTag = ({ level }: { level: OrgUnitAlert['level'] }) => {
-    if (level === 'high') {
+const AlertTag = ({ status }: { status: OrgUnitAlert['status'] }) => {
+    if (status === 'above') {
         return <Tag negative>{i18n.t('Above threshold')}</Tag>
     }
-    if (level === 'possible') {
+    if (status === 'possible') {
         return <Tag>{i18n.t('Possible')}</Tag>
+    }
+    if (status === 'no-threshold') {
+        return <Tag neutral>{i18n.t('No threshold')}</Tag>
     }
     return <Tag positive>{i18n.t('Below threshold')}</Tag>
 }
 
 /**
- * Ranks the prediction's org units by their peak forecasted cases and flags
- * the ones whose forecast crosses the configured threshold — median above
- * threshold is an alert, 90th percentile above threshold is "possible".
+ * Ranks a prediction's org units by how far their forecast rises above their
+ * own endemic threshold — median over the threshold is an alert, 90th
+ * percentile over it is "possible". Thresholds come from CHAP's threshold
+ * endpoint using the modeling app's strategies, so the table agrees with the
+ * outbreak map and with the modeling app's prediction charts.
  */
 export const WidgetView = ({ config }: { config: Config }) => {
+    const resolvedPrediction = useResolvedPredictionId(config.predictionId)
+    const { predictionId, prediction } = resolvedPrediction
     const entriesQuery = useQuery({
-        queryKey: [
-            'chap',
-            'prediction-entries',
-            config.predictionId,
-            ALERT_QUANTILES,
-        ],
-        queryFn: () =>
-            PredictionsService.getPredictionEntriesV1AnalyticsPredictionEntryPredictionIdGet(
-                config.predictionId,
+        queryKey: ['chap', 'prediction-entries', predictionId, ALERT_QUANTILES],
+        enabled: predictionId !== undefined,
+        queryFn: () => {
+            if (predictionId === undefined) {
+                throw new Error('Prediction id has not been resolved')
+            }
+            return PredictionsService.getPredictionEntriesV1AnalyticsPredictionEntryPredictionIdGet(
+                predictionId,
                 ALERT_QUANTILES
-            ),
+            )
+        },
         staleTime: 5 * 60 * 1000,
     })
-    const alerts = entriesQuery.data
-        ? buildAlerts(entriesQuery.data, config.threshold)
-        : []
+    const entries = entriesQuery.data
+
+    const periods = useMemo(
+        () => buildChartPeriods((entries ?? []).map((entry) => entry.period)),
+        [entries]
+    )
+    const orgUnitIds = useMemo(
+        () =>
+            Array.from(new Set((entries ?? []).map((entry) => entry.orgUnit))),
+        [entries]
+    )
+
+    // Thresholds are per (org unit, period), computed from the prediction's
+    // own dataset history — so they are requested for exactly the periods and
+    // org units the table lists.
+    const datasetId = prediction?.datasetId
+    const thresholdsQuery = useQuery({
+        queryKey: [
+            'chap',
+            'thresholds',
+            datasetId,
+            periods,
+            orgUnitIds,
+            config.threshold,
+        ],
+        enabled:
+            datasetId !== undefined &&
+            periods.length > 0 &&
+            orgUnitIds.length > 0,
+        queryFn: () =>
+            DatasetsService.computeThresholdsV1AnalyticsThresholdsPost({
+                datasetId: datasetId as number,
+                periodIds: periods,
+                locations: orgUnitIds,
+                params: config.threshold,
+            }),
+        staleTime: 30 * 60 * 1000,
+    })
+    const thresholds = useMemo(
+        () =>
+            thresholdsQuery.data
+                ? buildThresholdMap(thresholdsQuery.data)
+                : undefined,
+        [thresholdsQuery.data]
+    )
+
+    const alerts = useMemo(
+        () =>
+            buildAlerts(entries ?? [], (orgUnit, period) =>
+                thresholds?.get(orgUnit)?.get(canonicalizePeriodId(period))
+            ),
+        [entries, thresholds]
+    )
     const orgUnitNamesQuery = useOrgUnitNames(
         alerts.map((alert) => alert.orgUnitId)
     )
+    const aboveCount = alerts.filter((alert) => alert.status === 'above').length
 
-    if (entriesQuery.isLoading) {
+    if (
+        resolvedPrediction.isLoading ||
+        (predictionId !== undefined && entriesQuery.isLoading) ||
+        thresholdsQuery.isLoading
+    ) {
         return <LoadingState />
     }
-    if (entriesQuery.isError) {
+    if (resolvedPrediction.isError || entriesQuery.isError) {
         return (
             <ErrorState title={i18n.t('Could not load prediction')}>
                 {i18n.t(
                     'Fetching the prediction from the CHAP backend failed. It may have been deleted.'
                 )}
             </ErrorState>
+        )
+    }
+    if (thresholdsQuery.isError) {
+        return (
+            <ErrorState title={i18n.t('Could not compute thresholds')}>
+                {i18n.t(
+                    'CHAP could not compute endemic thresholds for this prediction’s dataset. It needs historical disease cases to compare against.'
+                )}
+            </ErrorState>
+        )
+    }
+    if (predictionId === undefined) {
+        return (
+            <PassiveState title={i18n.t('No predictions available')}>
+                {i18n.t('Create a prediction in CHAP to populate this widget.')}
+            </PassiveState>
         )
     }
     if (alerts.length === 0) {
@@ -144,10 +179,13 @@ export const WidgetView = ({ config }: { config: Config }) => {
                             {i18n.t('Organisation unit')}
                         </DataTableColumnHeader>
                         <DataTableColumnHeader>
-                            {i18n.t('Peak predicted cases')}
+                            {i18n.t('Predicted cases')}
                         </DataTableColumnHeader>
                         <DataTableColumnHeader>
-                            {i18n.t('Peak period')}
+                            {i18n.t('Threshold')}
+                        </DataTableColumnHeader>
+                        <DataTableColumnHeader>
+                            {i18n.t('Period')}
                         </DataTableColumnHeader>
                         <DataTableColumnHeader>
                             {i18n.t('Status')}
@@ -162,21 +200,33 @@ export const WidgetView = ({ config }: { config: Config }) => {
                                     alert.orgUnitId}
                             </DataTableCell>
                             <DataTableCell>
-                                {Math.round(alert.peakMedian)}
+                                {alert.ratio === null
+                                    ? formatCases(alert.median)
+                                    : i18n.t('{{cases}} ({{ratio}}×)', {
+                                          cases: formatCases(alert.median),
+                                          ratio:
+                                              Math.round(alert.ratio * 10) / 10,
+                                      })}
                             </DataTableCell>
                             <DataTableCell>
-                                {formatPeriodLabel(alert.peakPeriod)}
+                                {alert.threshold === null
+                                    ? '–'
+                                    : formatCases(alert.threshold)}
                             </DataTableCell>
                             <DataTableCell>
-                                <AlertTag level={alert.level} />
+                                {formatPeriodLabel(alert.period)}
+                            </DataTableCell>
+                            <DataTableCell>
+                                <AlertTag status={alert.status} />
                             </DataTableCell>
                         </DataTableRow>
                     ))}
                 </DataTableBody>
             </DataTable>
             <div className={styles.footer}>
-                {i18n.t('Threshold: {{threshold}} cases', {
-                    threshold: config.threshold,
+                {i18n.t('{{count}} above threshold — {{threshold}}', {
+                    count: aboveCount,
+                    threshold: describeThresholdParams(config.threshold),
                 })}
             </div>
         </div>

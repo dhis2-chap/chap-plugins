@@ -48,8 +48,9 @@ to it.
 | `showBasemap`  | `boolean` (default `true`) | OpenStreetMap raster tiles under the choropleth      |
 | `threshold`    | discriminated union        | endemic-threshold strategy + params (see below)      |
 
-`threshold` mirrors the modeling app's `ThresholdParams`, so identical values
-produce identical thresholds in both places:
+`threshold` is `ThresholdParamsSchema` from `@chap-widgets/shared`, shared with
+outbreak-alerts and mirroring the modeling app's `ThresholdParams`, so identical
+values produce identical thresholds in all three places:
 
 | strategy       | fields                                                                | default             |
 | -------------- | --------------------------------------------------------------------- | ------------------- |
@@ -73,7 +74,7 @@ Org unit geometry comes from the DHIS2 metadata API
 ## Files
 
 - `src/Plugin.tsx` — dashboard entrypoint: providers + `WidgetShell` wiring (rarely needs edits)
-- `src/config.ts` — zod config schema, threshold defaults, threshold description
+- `src/config.ts` — zod config schema
 - `src/ConfigForm.tsx` — edit-mode form (prediction picker, threshold strategy + params, basemap toggle)
 - `src/exceedance.ts` — pure classification of a forecast against its threshold (unit-tested)
 - `src/WidgetView.tsx` — view-mode map (palette, legend, popup, period stepper)
@@ -81,6 +82,8 @@ Org unit geometry comes from the DHIS2 metadata API
 
 The map itself — layers, hover popup, viewport fitting — is
 `ChoroplethMap` from `@chap-widgets/shared/maps`, shared with prediction-map.
+The threshold strategy picker is `ThresholdParamsFields` from
+`@chap-widgets/shared`, shared with outbreak-alerts.
 
 ## Commands
 

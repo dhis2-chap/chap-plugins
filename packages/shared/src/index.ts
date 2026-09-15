@@ -5,8 +5,31 @@ export { enableQueue, disableQueue, getQueue } from './chap-api/core/request'
 // CHAP route plumbing
 export { ChapProvider } from './chap/ChapProvider'
 export { ChapGuard, useChapSystemInfo } from './chap/ChapGuard'
+export {
+    getLatestPrediction,
+    sortPredictionsNewestFirst,
+    useResolvedPredictionId,
+} from './chap/predictions'
+
 export { buildThresholdMap, getThresholdLineRoles } from './chap/thresholds'
 export type { ThresholdLineRoles, ThresholdMap } from './chap/thresholds'
+export {
+    ThresholdParamsSchema,
+    DEFAULT_THRESHOLD,
+    DEFAULT_THRESHOLD_PARAMS,
+    DEFAULT_THRESHOLD_STRATEGY,
+    describeThresholdParams,
+    parseThresholdParams,
+    toThresholdFormValues,
+} from './chap/thresholdParams'
+export type {
+    ThresholdFormErrors,
+    ThresholdFormValues,
+    ThresholdParams,
+    ThresholdStrategy,
+} from './chap/thresholdParams'
+export { ThresholdParamsFields } from './chap/ThresholdParamsFields'
+export type { ThresholdParamsFieldsProps } from './chap/ThresholdParamsFields'
 
 // Dashboard plugin shell
 export type { DashboardPluginProps } from './plugin/types'

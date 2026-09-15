@@ -10,6 +10,7 @@ import {
     buildStatsByPeriod,
     buildThresholdMap,
     canonicalizePeriodId,
+    describeThresholdParams,
     formatPeriodLabel,
 } from '@chap-widgets/shared'
 import {
@@ -24,7 +25,7 @@ import { Button, IconChevronLeft16, IconChevronRight16 } from '@dhis2/ui'
 import { useQuery } from '@tanstack/react-query'
 import type { FeatureCollection, GeoJsonProperties, Geometry } from 'geojson'
 import React, { useEffect, useMemo, useState } from 'react'
-import { describeThresholdParams, type Config } from './config'
+import { type Config } from './config'
 import {
     RATIO_BREAKS,
     classifyExceedance,

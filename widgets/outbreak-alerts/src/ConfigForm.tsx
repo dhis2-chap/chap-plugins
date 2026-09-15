@@ -1,8 +1,12 @@
 import {
     PredictionsService,
+    ThresholdParamsFields,
+    sortPredictionsNewestFirst,
+    DEFAULT_THRESHOLD,
     LoadingState,
     ErrorState,
     type ConfigFormProps,
+    type ThresholdParams,
 } from '@chap-widgets/shared'
 import i18n from '@dhis2/d2-i18n'
 import {
@@ -16,6 +20,8 @@ import React, { useState } from 'react'
 import { type Config } from './config'
 import styles from './ConfigForm.module.css'
 
+const LATEST_PREDICTION = 'latest'
+
 export const ConfigForm = ({
     config,
     onSave,
@@ -25,18 +31,19 @@ export const ConfigForm = ({
     const [predictionId, setPredictionId] = useState<number | undefined>(
         config?.predictionId
     )
-    const [threshold, setThreshold] = useState(
-        config ? String(config.threshold) : ''
+    const [threshold, setThreshold] = useState<ThresholdParams | undefined>(
+        config?.threshold ?? DEFAULT_THRESHOLD
     )
 
     const predictionsQuery = useQuery({
         queryKey: ['chap', 'predictions'],
         queryFn: () => PredictionsService.getPredictionsV1CrudPredictionsGet(),
     })
-    const predictions = predictionsQuery.data ?? []
-    const selectedPrediction = predictions.find(
-        (prediction) => prediction.id === predictionId
-    )
+    const predictions = sortPredictionsNewestFirst(predictionsQuery.data ?? [])
+    const selectedPrediction =
+        predictionId === undefined
+            ? predictions[0]
+            : predictions.find((prediction) => prediction.id === predictionId)
 
     if (predictionsQuery.isLoading) {
         return <LoadingState />
@@ -51,24 +58,34 @@ export const ConfigForm = ({
         )
     }
 
-    const parsedThreshold = Number(threshold)
-    const canSave =
-        predictionId !== undefined &&
-        threshold !== '' &&
-        Number.isFinite(parsedThreshold) &&
-        parsedThreshold >= 0
+    const canSave = !!selectedPrediction && !!threshold
 
     return (
         <div className={styles.form}>
             <SingleSelectField
-                label={i18n.t('Prediction')}
+                label={i18n.t('Prediction source')}
+                helpText={i18n.t(
+                    'Follow the latest prediction automatically, or pin this widget to a specific prediction.'
+                )}
                 selected={
-                    selectedPrediction
-                        ? String(selectedPrediction.id)
-                        : undefined
+                    predictionId === undefined
+                        ? LATEST_PREDICTION
+                        : selectedPrediction
+                          ? String(selectedPrediction.id)
+                          : undefined
                 }
-                onChange={({ selected }) => setPredictionId(Number(selected))}
+                onChange={({ selected }) =>
+                    setPredictionId(
+                        selected === LATEST_PREDICTION
+                            ? undefined
+                            : Number(selected)
+                    )
+                }
             >
+                <SingleSelectOption
+                    value={LATEST_PREDICTION}
+                    label={i18n.t('Latest prediction (automatic)')}
+                />
                 {predictions.map((prediction) => (
                     <SingleSelectOption
                         key={prediction.id}
@@ -77,11 +94,9 @@ export const ConfigForm = ({
                     />
                 ))}
             </SingleSelectField>
-            <InputField
-                label={i18n.t('Alert threshold (predicted cases)')}
-                type="number"
-                value={threshold}
-                onChange={({ value }) => setThreshold(value ?? '')}
+            <ThresholdParamsFields
+                params={config?.threshold}
+                onChange={setThreshold}
             />
             <InputField
                 label={i18n.t('Widget title (optional)')}
@@ -93,15 +108,15 @@ export const ConfigForm = ({
                 loading={isSaving}
                 disabled={!canSave}
                 onClick={() => {
-                    if (predictionId === undefined) {
+                    if (!selectedPrediction || !threshold) {
                         return
                     }
                     onSave({
                         version: 1,
                         widget: 'chap-widget-outbreak-alerts',
                         title: title.trim() || undefined,
-                        predictionId,
-                        threshold: parsedThreshold,
+                        ...(predictionId === undefined ? {} : { predictionId }),
+                        threshold,
                     })
                 }}
             >
