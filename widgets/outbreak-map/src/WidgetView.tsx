@@ -2,6 +2,8 @@ import {
     DatasetsService,
     PredictionsService,
     useOrgUnitGeometryContext,
+    useResolvedPredictionId,
+    MissingPredictionState,
     LoadingState,
     PassiveState,
     ErrorState,
@@ -165,33 +167,21 @@ const renderPopup = (properties: GeoJsonProperties): HTMLElement => {
  * strategies and defaults, so the map agrees with its prediction charts.
  */
 export const WidgetView = ({ config }: { config: Config }) => {
-    const predictionsQuery = useQuery({
-        queryKey: ['chap', 'predictions'],
-        queryFn: () => PredictionsService.getPredictionsV1CrudPredictionsGet(),
-        staleTime: 60 * 1000,
-    })
-    const predictions = predictionsQuery.data
-    const prediction = useMemo(() => {
-        if (!predictions) {
-            return undefined
-        }
-        if (config.predictionId === 'latest') {
-            return [...predictions].sort(
-                (a, b) => b.created.localeCompare(a.created) || b.id - a.id
-            )[0]
-        }
-        return predictions.find((p) => p.id === config.predictionId)
-    }, [predictions, config.predictionId])
-    const predictionId = prediction?.id
+    const resolvedPrediction = useResolvedPredictionId(config.predictionId)
+    const { prediction, predictionId } = resolvedPrediction
 
     const entriesQuery = useQuery({
         queryKey: ['chap', 'prediction-entries', predictionId],
         enabled: predictionId !== undefined,
-        queryFn: () =>
-            PredictionsService.getPredictionEntriesV1AnalyticsPredictionEntryPredictionIdGet(
-                predictionId as number,
+        queryFn: () => {
+            if (predictionId === undefined) {
+                throw new Error('Prediction id has not been resolved')
+            }
+            return PredictionsService.getPredictionEntriesV1AnalyticsPredictionEntryPredictionIdGet(
+                predictionId,
                 STANDARD_QUANTILES
-            ),
+            )
+        },
         staleTime: 5 * 60 * 1000,
     })
     const entries = entriesQuery.data
@@ -305,10 +295,10 @@ export const WidgetView = ({ config }: { config: Config }) => {
         }
     }, [features, activeStats, activePeriod, thresholds])
 
-    if (predictionsQuery.isLoading) {
+    if (resolvedPrediction.isLoading) {
         return <LoadingState />
     }
-    if (predictionsQuery.isError) {
+    if (resolvedPrediction.isError) {
         return (
             <ErrorState title={i18n.t('Could not load predictions')}>
                 {i18n.t(
@@ -318,18 +308,10 @@ export const WidgetView = ({ config }: { config: Config }) => {
         )
     }
     if (!prediction) {
-        return config.predictionId === 'latest' ? (
-            <PassiveState title={i18n.t('No predictions yet')}>
-                {i18n.t(
-                    'No predictions have been run on the CHAP backend yet.'
-                )}
-            </PassiveState>
-        ) : (
-            <PassiveState title={i18n.t('Prediction not found')}>
-                {i18n.t(
-                    'The configured prediction no longer exists. Reconfigure this widget while editing the dashboard.'
-                )}
-            </PassiveState>
+        return (
+            <MissingPredictionState
+                followsLatest={resolvedPrediction.followsLatest}
+            />
         )
     }
     if (

@@ -1,4 +1,7 @@
-import { ThresholdParamsSchema } from '@chap-widgets/shared'
+import {
+    PredictionSelectionSchema,
+    ThresholdParamsSchema,
+} from '@chap-widgets/shared'
 import { z } from 'zod'
 
 /**
@@ -10,8 +13,8 @@ export const ConfigSchema = z.object({
     version: z.literal(1),
     widget: z.literal('chap-widget-outbreak-alerts'),
     title: z.string().optional(),
-    /** CHAP prediction to rank org units from; unset means follow the latest */
-    predictionId: z.number().optional(),
+    /** Which prediction to render: 'latest' follows new runs, a number pins one */
+    predictionId: PredictionSelectionSchema,
     /** How the endemic threshold each org unit is compared against is computed */
     threshold: ThresholdParamsSchema,
 })

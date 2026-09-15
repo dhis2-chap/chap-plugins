@@ -1,26 +1,22 @@
 import {
     PredictionsService,
+    PredictionSelectField,
     ThresholdParamsFields,
-    sortPredictionsNewestFirst,
+    resolvePrediction,
     DEFAULT_THRESHOLD,
+    LATEST_PREDICTION,
     LoadingState,
     ErrorState,
     type ConfigFormProps,
+    type PredictionSelection,
     type ThresholdParams,
 } from '@chap-widgets/shared'
 import i18n from '@dhis2/d2-i18n'
-import {
-    Button,
-    InputField,
-    SingleSelectField,
-    SingleSelectOption,
-} from '@dhis2/ui'
+import { Button, InputField } from '@dhis2/ui'
 import { useQuery } from '@tanstack/react-query'
 import React, { useState } from 'react'
 import { type Config } from './config'
 import styles from './ConfigForm.module.css'
-
-const LATEST_PREDICTION = 'latest'
 
 export const ConfigForm = ({
     config,
@@ -28,8 +24,8 @@ export const ConfigForm = ({
     isSaving,
 }: ConfigFormProps<Config>) => {
     const [title, setTitle] = useState(config?.title ?? '')
-    const [predictionId, setPredictionId] = useState<number | undefined>(
-        config?.predictionId
+    const [selection, setSelection] = useState<PredictionSelection>(
+        config?.predictionId ?? LATEST_PREDICTION
     )
     const [threshold, setThreshold] = useState<ThresholdParams | undefined>(
         config?.threshold ?? DEFAULT_THRESHOLD
@@ -39,11 +35,8 @@ export const ConfigForm = ({
         queryKey: ['chap', 'predictions'],
         queryFn: () => PredictionsService.getPredictionsV1CrudPredictionsGet(),
     })
-    const predictions = sortPredictionsNewestFirst(predictionsQuery.data ?? [])
-    const selectedPrediction =
-        predictionId === undefined
-            ? predictions[0]
-            : predictions.find((prediction) => prediction.id === predictionId)
+    const predictions = predictionsQuery.data ?? []
+    const selectedPrediction = resolvePrediction(predictions, selection)
 
     if (predictionsQuery.isLoading) {
         return <LoadingState />
@@ -62,38 +55,11 @@ export const ConfigForm = ({
 
     return (
         <div className={styles.form}>
-            <SingleSelectField
-                label={i18n.t('Prediction source')}
-                helpText={i18n.t(
-                    'Follow the latest prediction automatically, or pin this widget to a specific prediction.'
-                )}
-                selected={
-                    predictionId === undefined
-                        ? LATEST_PREDICTION
-                        : selectedPrediction
-                          ? String(selectedPrediction.id)
-                          : undefined
-                }
-                onChange={({ selected }) =>
-                    setPredictionId(
-                        selected === LATEST_PREDICTION
-                            ? undefined
-                            : Number(selected)
-                    )
-                }
-            >
-                <SingleSelectOption
-                    value={LATEST_PREDICTION}
-                    label={i18n.t('Latest prediction (automatic)')}
-                />
-                {predictions.map((prediction) => (
-                    <SingleSelectOption
-                        key={prediction.id}
-                        value={String(prediction.id)}
-                        label={`${prediction.name} (${prediction.modelId})`}
-                    />
-                ))}
-            </SingleSelectField>
+            <PredictionSelectField
+                predictions={predictions}
+                value={selection}
+                onChange={setSelection}
+            />
             <ThresholdParamsFields
                 params={config?.threshold}
                 onChange={setThreshold}
@@ -115,7 +81,7 @@ export const ConfigForm = ({
                         version: 1,
                         widget: 'chap-widget-outbreak-alerts',
                         title: title.trim() || undefined,
-                        ...(predictionId === undefined ? {} : { predictionId }),
+                        predictionId: selection,
                         threshold,
                     })
                 }}

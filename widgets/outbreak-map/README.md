@@ -61,9 +61,12 @@ Only the **upper** line is the alert threshold; the lower one is kept so the
 params match the modeling app's endemic-channel band one-for-one. Which line is
 upper is read from the params the response echoes back, never from the request.
 
+`predictionId` is `PredictionSelectionSchema` from `@chap-widgets/shared`, the
+same field every prediction-backed widget uses.
+
 ## CHAP endpoints used
 
-- `GET /v1/crud/predictions` — prediction dropdown in the config form + resolving `'latest'` in the view
+- `GET /v1/crud/predictions` — prediction dropdown in the config form + resolving `predictionId` in the view
 - `GET /v1/analytics/prediction-entry/{predictionId}?quantiles=0.1,0.25,0.5,0.75,0.9` — forecast quantiles for all org units
 - `POST /v1/analytics/thresholds` — one endemic threshold per (org unit, period) from the prediction's dataset history
 

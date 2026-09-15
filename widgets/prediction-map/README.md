@@ -35,9 +35,12 @@ instead of being presented as an isolated cluster. The ancestor's DHIS2
 | `predictionId` | `'latest' \| number`       | `'latest'` follows the newest run; a number pins one |
 | `showBasemap`  | `boolean` (default `true`) | OpenStreetMap raster tiles under the choropleth      |
 
+`predictionId` is `PredictionSelectionSchema` from `@chap-widgets/shared`, the
+same field every prediction-backed widget uses.
+
 ## CHAP endpoints used
 
-- `GET /v1/crud/predictions` — prediction dropdown in the config form + resolving `'latest'` in the view
+- `GET /v1/crud/predictions` — prediction dropdown in the config form + resolving `predictionId` in the view
 - `GET /v1/analytics/prediction-entry/{predictionId}?quantiles=0.1,0.25,0.5,0.75,0.9` — forecast quantiles for all org units
 
 Org unit geometry comes from the DHIS2 metadata API

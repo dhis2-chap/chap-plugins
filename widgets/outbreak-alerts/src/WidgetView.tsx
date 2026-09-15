@@ -10,6 +10,7 @@ import {
     LoadingState,
     PassiveState,
     ErrorState,
+    MissingPredictionState,
     useResolvedPredictionId,
 } from '@chap-widgets/shared'
 import i18n from '@dhis2/d2-i18n'
@@ -130,14 +131,29 @@ export const WidgetView = ({ config }: { config: Config }) => {
     )
     const aboveCount = alerts.filter((alert) => alert.status === 'above').length
 
-    if (
-        resolvedPrediction.isLoading ||
-        (predictionId !== undefined && entriesQuery.isLoading) ||
-        thresholdsQuery.isLoading
-    ) {
+    if (resolvedPrediction.isLoading) {
         return <LoadingState />
     }
-    if (resolvedPrediction.isError || entriesQuery.isError) {
+    if (resolvedPrediction.isError) {
+        return (
+            <ErrorState title={i18n.t('Could not load predictions')}>
+                {i18n.t(
+                    'Fetching the prediction list from the CHAP backend failed.'
+                )}
+            </ErrorState>
+        )
+    }
+    if (!prediction) {
+        return (
+            <MissingPredictionState
+                followsLatest={resolvedPrediction.followsLatest}
+            />
+        )
+    }
+    if (entriesQuery.isLoading || thresholdsQuery.isLoading) {
+        return <LoadingState />
+    }
+    if (entriesQuery.isError) {
         return (
             <ErrorState title={i18n.t('Could not load prediction')}>
                 {i18n.t(
@@ -153,13 +169,6 @@ export const WidgetView = ({ config }: { config: Config }) => {
                     'CHAP could not compute endemic thresholds for this prediction’s dataset. It needs historical disease cases to compare against.'
                 )}
             </ErrorState>
-        )
-    }
-    if (predictionId === undefined) {
-        return (
-            <PassiveState title={i18n.t('No predictions available')}>
-                {i18n.t('Create a prediction in CHAP to populate this widget.')}
-            </PassiveState>
         )
     }
     if (alerts.length === 0) {

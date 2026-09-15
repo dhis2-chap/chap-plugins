@@ -105,6 +105,15 @@ dashboard.seed.json directly — the fastest layout/config loop, no deploy.
 - The Route API 503s under concurrent load; the generated client has a
   p-queue throttle and `ChapProvider` installs the retry policy. Don't fight
   it with custom retries.
+- Every widget that renders a prediction stores its choice as
+  `predictionId: PredictionSelectionSchema` (`'latest' | number`) and resolves
+  it with `useResolvedPredictionId`, which returns the prediction record,
+  whether it follows the latest run, and the list's loading/error state.
+  `'latest'` is an explicit literal, never an absent field — an omitted key
+  means a config that failed to write, and must render as "not configured".
+  Pair the hook with `MissingPredictionState` in the view and
+  `PredictionSelectField` in the form; don't hand-roll the picker, the
+  newest-run sort, or a second `['chap', 'predictions']` query.
 - Standard quantiles everywhere: `[0.1, 0.25, 0.5, 0.75, 0.9]`
   (`STANDARD_QUANTILES`). The fan chart maps 0.25/0.75 → 50% band,
   0.1/0.9 → 80% band.

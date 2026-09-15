@@ -25,19 +25,22 @@ endemic-channel percentile band), computed from the prediction's own dataset
 history — so the table agrees with the outbreak map and with the modeling app's
 prediction charts.
 
-The widget follows the most recently created prediction by default and checks
-for a newer one every five minutes. Configure a specific `predictionId` to pin
-it to that prediction instead.
+With `predictionId: 'latest'` the widget ranks whichever prediction CHAP ran
+most recently and re-checks every five minutes, so a dashboard left open picks
+up new runs on its own. Pin it to an id to hold it on one prediction.
 
 ## Config schema (`src/config.ts`)
 
-| field          | type                | meaning                                         |
-| -------------- | ------------------- | ----------------------------------------------- |
-| `version`      | `1`                 | config schema version                           |
-| `widget`       | literal             | widget discriminator                            |
-| `title`        | `string?`           | dashboard item title override                   |
-| `predictionId` | `number?`           | pinned prediction; unset follows latest         |
-| `threshold`    | discriminated union | endemic-threshold strategy + params (see below) |
+| field          | type                 | meaning                                              |
+| -------------- | -------------------- | ---------------------------------------------------- |
+| `version`      | `1`                  | config schema version                                |
+| `widget`       | literal              | widget discriminator                                 |
+| `title`        | `string?`            | dashboard item title override                        |
+| `predictionId` | `'latest' \| number` | `'latest'` follows the newest run; a number pins one |
+| `threshold`    | discriminated union  | endemic-threshold strategy + params (see below)      |
+
+`predictionId` is `PredictionSelectionSchema` from `@chap-widgets/shared`, the
+same field every prediction-backed widget uses.
 
 `threshold` is `ThresholdParamsSchema` from `@chap-widgets/shared`, shared with
 outbreak-map and mirroring the modeling app's `ThresholdParams`:

@@ -1,10 +1,13 @@
 import {
     PredictionsService,
-    sortPredictionsNewestFirst,
+    PredictionSelectField,
+    resolvePrediction,
     useOrgUnitNames,
+    LATEST_PREDICTION,
     LoadingState,
     ErrorState,
     type ConfigFormProps,
+    type PredictionSelection,
 } from '@chap-widgets/shared'
 import i18n from '@dhis2/d2-i18n'
 import {
@@ -18,16 +21,14 @@ import React, { useState } from 'react'
 import { type Config } from './config'
 import styles from './ConfigForm.module.css'
 
-const LATEST_PREDICTION = 'latest'
-
 export const ConfigForm = ({
     config,
     onSave,
     isSaving,
 }: ConfigFormProps<Config>) => {
     const [title, setTitle] = useState(config?.title ?? '')
-    const [predictionId, setPredictionId] = useState<number | undefined>(
-        config?.predictionId
+    const [selection, setSelection] = useState<PredictionSelection>(
+        config?.predictionId ?? LATEST_PREDICTION
     )
     const [orgUnitId, setOrgUnitId] = useState<string | undefined>(
         config?.orgUnitId
@@ -37,11 +38,8 @@ export const ConfigForm = ({
         queryKey: ['chap', 'predictions'],
         queryFn: () => PredictionsService.getPredictionsV1CrudPredictionsGet(),
     })
-    const predictions = sortPredictionsNewestFirst(predictionsQuery.data ?? [])
-    const selectedPrediction =
-        predictionId === undefined
-            ? predictions[0]
-            : predictions.find((prediction) => prediction.id === predictionId)
+    const predictions = predictionsQuery.data ?? []
+    const selectedPrediction = resolvePrediction(predictions, selection)
     const orgUnitIds =
         selectedPrediction?.orgUnits ??
         selectedPrediction?.dataset.orgUnits ??
@@ -66,39 +64,14 @@ export const ConfigForm = ({
 
     return (
         <div className={styles.form}>
-            <SingleSelectField
-                label={i18n.t('Prediction source')}
-                helpText={i18n.t(
-                    'Follow the latest prediction automatically, or pin this widget to a specific prediction.'
-                )}
-                selected={
-                    predictionId === undefined
-                        ? LATEST_PREDICTION
-                        : selectedPrediction
-                          ? String(selectedPrediction.id)
-                          : undefined
-                }
-                onChange={({ selected }) => {
-                    setPredictionId(
-                        selected === LATEST_PREDICTION
-                            ? undefined
-                            : Number(selected)
-                    )
+            <PredictionSelectField
+                predictions={predictions}
+                value={selection}
+                onChange={(next) => {
+                    setSelection(next)
                     setOrgUnitId(undefined)
                 }}
-            >
-                <SingleSelectOption
-                    value={LATEST_PREDICTION}
-                    label={i18n.t('Latest prediction (automatic)')}
-                />
-                {predictions.map((prediction) => (
-                    <SingleSelectOption
-                        key={prediction.id}
-                        value={String(prediction.id)}
-                        label={`${prediction.name} (${prediction.modelId})`}
-                    />
-                ))}
-            </SingleSelectField>
+            />
             <SingleSelectField
                 label={i18n.t('Organisation unit')}
                 disabled={!selectedPrediction}
@@ -134,7 +107,7 @@ export const ConfigForm = ({
                         version: 1,
                         widget: 'chap-widget-prediction-chart',
                         title: title.trim() || undefined,
-                        ...(predictionId === undefined ? {} : { predictionId }),
+                        predictionId: selection,
                         orgUnitId,
                         orgUnitName: orgUnitNamesQuery.data?.get(orgUnitId),
                     })

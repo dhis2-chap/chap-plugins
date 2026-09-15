@@ -1,4 +1,7 @@
-import { ThresholdParamsSchema } from '@chap-widgets/shared'
+import {
+    PredictionSelectionSchema,
+    ThresholdParamsSchema,
+} from '@chap-widgets/shared'
 import { z } from 'zod'
 
 /**
@@ -10,8 +13,8 @@ export const ConfigSchema = z.object({
     version: z.literal(1),
     widget: z.literal('chap-widget-outbreak-map'),
     title: z.string().optional(),
-    /** 'latest' follows the most recently run prediction; a number pins one */
-    predictionId: z.union([z.literal('latest'), z.number()]),
+    /** Which prediction to render: 'latest' follows new runs, a number pins one */
+    predictionId: PredictionSelectionSchema,
     /** Render OpenStreetMap tiles under the choropleth */
     showBasemap: z.boolean().default(true),
     /** How the endemic threshold each org unit is compared against is computed */

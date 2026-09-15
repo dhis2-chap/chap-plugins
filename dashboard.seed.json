@@ -17,7 +17,8 @@
                 "widget": "chap-widget-prediction-chart",
                 "version": 1,
                 "orgUnitId": "W6sNfkJcXGC",
-                "orgUnitName": "01 Vientiane Capital"
+                "orgUnitName": "01 Vientiane Capital",
+                "predictionId": "latest"
             }
         },
         {
@@ -90,7 +91,8 @@
                 "threshold": {
                     "type": "seasonal",
                     "stdMultiplier": 2
-                }
+                },
+                "predictionId": "latest"
             }
         },
         {

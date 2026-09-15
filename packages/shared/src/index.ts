@@ -5,11 +5,18 @@ export { enableQueue, disableQueue, getQueue } from './chap-api/core/request'
 // CHAP route plumbing
 export { ChapProvider } from './chap/ChapProvider'
 export { ChapGuard, useChapSystemInfo } from './chap/ChapGuard'
+export { useResolvedPredictionId } from './chap/predictions'
 export {
+    LATEST_PREDICTION,
+    PredictionSelectionSchema,
     getLatestPrediction,
+    resolvePrediction,
     sortPredictionsNewestFirst,
-    useResolvedPredictionId,
-} from './chap/predictions'
+} from './chap/predictionSelection'
+export type { PredictionSelection } from './chap/predictionSelection'
+export { PredictionSelectField } from './chap/PredictionSelectField'
+export type { PredictionSelectFieldProps } from './chap/PredictionSelectField'
+export { MissingPredictionState } from './chap/MissingPredictionState'
 
 export { buildThresholdMap, getThresholdLineRoles } from './chap/thresholds'
 export type { ThresholdLineRoles, ThresholdMap } from './chap/thresholds'

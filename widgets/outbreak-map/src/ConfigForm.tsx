@@ -1,26 +1,21 @@
 import {
     PredictionsService,
+    PredictionSelectField,
     ThresholdParamsFields,
     DEFAULT_THRESHOLD,
+    LATEST_PREDICTION,
     LoadingState,
     ErrorState,
     type ConfigFormProps,
+    type PredictionSelection,
     type ThresholdParams,
 } from '@chap-widgets/shared'
 import i18n from '@dhis2/d2-i18n'
-import {
-    Button,
-    Checkbox,
-    InputField,
-    SingleSelectField,
-    SingleSelectOption,
-} from '@dhis2/ui'
+import { Button, Checkbox, InputField } from '@dhis2/ui'
 import { useQuery } from '@tanstack/react-query'
 import React, { useState } from 'react'
 import { type Config } from './config'
 import styles from './ConfigForm.module.css'
-
-const LATEST = 'latest'
 
 export const ConfigForm = ({
     config,
@@ -28,10 +23,8 @@ export const ConfigForm = ({
     isSaving,
 }: ConfigFormProps<Config>) => {
     const [title, setTitle] = useState(config?.title ?? '')
-    const [selection, setSelection] = useState<string>(
-        config === null || config.predictionId === LATEST
-            ? LATEST
-            : String(config.predictionId)
+    const [selection, setSelection] = useState<PredictionSelection>(
+        config?.predictionId ?? LATEST_PREDICTION
     )
     const [showBasemap, setShowBasemap] = useState(config?.showBasemap ?? true)
     const [threshold, setThreshold] = useState<ThresholdParams | undefined>(
@@ -56,35 +49,18 @@ export const ConfigForm = ({
         )
     }
 
-    const predictions = [...(predictionsQuery.data ?? [])].sort((a, b) =>
-        b.created.localeCompare(a.created)
-    )
+    const predictions = predictionsQuery.data ?? []
     const selectionIsValid =
-        selection === LATEST ||
-        predictions.some((prediction) => String(prediction.id) === selection)
+        selection === LATEST_PREDICTION ||
+        predictions.some((prediction) => prediction.id === selection)
 
     return (
         <div className={styles.form}>
-            <SingleSelectField
-                label={i18n.t('Prediction')}
-                helpText={i18n.t(
-                    '“Latest prediction” switches to new runs automatically.'
-                )}
-                selected={selectionIsValid ? selection : undefined}
-                onChange={({ selected }) => setSelection(selected)}
-            >
-                <SingleSelectOption
-                    value={LATEST}
-                    label={i18n.t('Latest prediction (automatic)')}
-                />
-                {predictions.map((prediction) => (
-                    <SingleSelectOption
-                        key={prediction.id}
-                        value={String(prediction.id)}
-                        label={`${prediction.name} (${prediction.modelId})`}
-                    />
-                ))}
-            </SingleSelectField>
+            <PredictionSelectField
+                predictions={predictions}
+                value={selection}
+                onChange={setSelection}
+            />
             <ThresholdParamsFields
                 params={config?.threshold}
                 onChange={setThreshold}
@@ -111,8 +87,7 @@ export const ConfigForm = ({
                         version: 1,
                         widget: 'chap-widget-outbreak-map',
                         title: title.trim() || undefined,
-                        predictionId:
-                            selection === LATEST ? LATEST : Number(selection),
+                        predictionId: selection,
                         showBasemap,
                         threshold,
                     })
