@@ -9,8 +9,8 @@ export const ConfigSchema = z.object({
     version: z.literal(1),
     widget: z.literal('chap-widget-prediction-chart'),
     title: z.string().optional(),
-    /** CHAP prediction to plot */
-    predictionId: z.number(),
+    /** CHAP prediction to plot; unset means follow the latest prediction */
+    predictionId: z.number().optional(),
     /** Org unit (as used in the prediction entries) to plot */
     orgUnitId: z.string(),
     /** Display name snapshot so the view doesn't depend on metadata access */

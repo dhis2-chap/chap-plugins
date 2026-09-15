@@ -7,6 +7,7 @@ import {
     PassiveState,
     ErrorState,
     STANDARD_QUANTILES,
+    useResolvedPredictionId,
 } from '@chap-widgets/shared'
 import i18n from '@dhis2/d2-i18n'
 import { useQuery } from '@tanstack/react-query'
@@ -15,21 +16,33 @@ import { type Config } from './config'
 import styles from './WidgetView.module.css'
 
 export const WidgetView = ({ config }: { config: Config }) => {
+    const resolvedPrediction = useResolvedPredictionId(config.predictionId)
+    const predictionId = resolvedPrediction.predictionId
     const predictionQuery = useQuery({
-        queryKey: ['chap', 'prediction', config.predictionId],
-        queryFn: () =>
-            PredictionsService.getPredictionV1CrudPredictionsPredictionIdGet(
-                config.predictionId
-            ),
+        queryKey: ['chap', 'prediction', predictionId],
+        enabled: predictionId !== undefined,
+        queryFn: () => {
+            if (predictionId === undefined) {
+                throw new Error('Prediction id has not been resolved')
+            }
+            return PredictionsService.getPredictionV1CrudPredictionsPredictionIdGet(
+                predictionId
+            )
+        },
         staleTime: 5 * 60 * 1000,
     })
     const entriesQuery = useQuery({
-        queryKey: ['chap', 'prediction-entries', config.predictionId],
-        queryFn: () =>
-            PredictionsService.getPredictionEntriesV1AnalyticsPredictionEntryPredictionIdGet(
-                config.predictionId,
+        queryKey: ['chap', 'prediction-entries', predictionId],
+        enabled: predictionId !== undefined,
+        queryFn: () => {
+            if (predictionId === undefined) {
+                throw new Error('Prediction id has not been resolved')
+            }
+            return PredictionsService.getPredictionEntriesV1AnalyticsPredictionEntryPredictionIdGet(
+                predictionId,
                 STANDARD_QUANTILES
-            ),
+            )
+        },
         staleTime: 5 * 60 * 1000,
     })
     const datasetId = predictionQuery.data?.datasetId
@@ -46,19 +59,32 @@ export const WidgetView = ({ config }: { config: Config }) => {
     })
 
     if (
-        predictionQuery.isLoading ||
-        entriesQuery.isLoading ||
+        resolvedPrediction.isLoading ||
+        (predictionId !== undefined && predictionQuery.isLoading) ||
+        (predictionId !== undefined && entriesQuery.isLoading) ||
         (datasetId !== undefined && actualsQuery.isLoading)
     ) {
         return <LoadingState />
     }
-    if (entriesQuery.isError || predictionQuery.isError) {
+    if (
+        resolvedPrediction.isError ||
+        entriesQuery.isError ||
+        predictionQuery.isError
+    ) {
         return (
             <ErrorState title={i18n.t('Could not load prediction')}>
                 {i18n.t(
                     'Fetching the prediction from the CHAP backend failed. It may have been deleted.'
                 )}
             </ErrorState>
+        )
+    }
+
+    if (predictionId === undefined) {
+        return (
+            <PassiveState title={i18n.t('No predictions available')}>
+                {i18n.t('Create a prediction in CHAP to populate this widget.')}
+            </PassiveState>
         )
     }
 

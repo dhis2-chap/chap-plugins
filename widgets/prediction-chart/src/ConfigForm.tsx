@@ -1,5 +1,6 @@
 import {
     PredictionsService,
+    sortPredictionsNewestFirst,
     useOrgUnitNames,
     LoadingState,
     ErrorState,
@@ -16,6 +17,8 @@ import { useQuery } from '@tanstack/react-query'
 import React, { useState } from 'react'
 import { type Config } from './config'
 import styles from './ConfigForm.module.css'
+
+const LATEST_PREDICTION = 'latest'
 
 export const ConfigForm = ({
     config,
@@ -34,10 +37,11 @@ export const ConfigForm = ({
         queryKey: ['chap', 'predictions'],
         queryFn: () => PredictionsService.getPredictionsV1CrudPredictionsGet(),
     })
-    const predictions = predictionsQuery.data ?? []
-    const selectedPrediction = predictions.find(
-        (prediction) => prediction.id === predictionId
-    )
+    const predictions = sortPredictionsNewestFirst(predictionsQuery.data ?? [])
+    const selectedPrediction =
+        predictionId === undefined
+            ? predictions[0]
+            : predictions.find((prediction) => prediction.id === predictionId)
     const orgUnitIds =
         selectedPrediction?.orgUnits ??
         selectedPrediction?.dataset.orgUnits ??
@@ -58,22 +62,35 @@ export const ConfigForm = ({
     }
 
     const orgUnitName = (id: string) => orgUnitNamesQuery.data?.get(id) ?? id
-    const canSave = predictionId !== undefined && !!orgUnitId
+    const canSave = !!selectedPrediction && !!orgUnitId
 
     return (
         <div className={styles.form}>
             <SingleSelectField
-                label={i18n.t('Prediction')}
+                label={i18n.t('Prediction source')}
+                helpText={i18n.t(
+                    'Follow the latest prediction automatically, or pin this widget to a specific prediction.'
+                )}
                 selected={
-                    selectedPrediction
-                        ? String(selectedPrediction.id)
-                        : undefined
+                    predictionId === undefined
+                        ? LATEST_PREDICTION
+                        : selectedPrediction
+                          ? String(selectedPrediction.id)
+                          : undefined
                 }
                 onChange={({ selected }) => {
-                    setPredictionId(Number(selected))
+                    setPredictionId(
+                        selected === LATEST_PREDICTION
+                            ? undefined
+                            : Number(selected)
+                    )
                     setOrgUnitId(undefined)
                 }}
             >
+                <SingleSelectOption
+                    value={LATEST_PREDICTION}
+                    label={i18n.t('Latest prediction (automatic)')}
+                />
                 {predictions.map((prediction) => (
                     <SingleSelectOption
                         key={prediction.id}
@@ -110,14 +127,14 @@ export const ConfigForm = ({
                 loading={isSaving}
                 disabled={!canSave}
                 onClick={() => {
-                    if (predictionId === undefined || !orgUnitId) {
+                    if (!selectedPrediction || !orgUnitId) {
                         return
                     }
                     onSave({
                         version: 1,
                         widget: 'chap-widget-prediction-chart',
                         title: title.trim() || undefined,
-                        predictionId,
+                        ...(predictionId === undefined ? {} : { predictionId }),
                         orgUnitId,
                         orgUnitName: orgUnitNamesQuery.data?.get(orgUnitId),
                     })
