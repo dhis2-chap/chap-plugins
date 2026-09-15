@@ -8,8 +8,8 @@ read to understand the widget without reading the code.
 ## What it shows
 
 An operational overview of the CHAP backend: the most recent jobs with their
-status (auto-refreshing every 30s), the configured models, and the running
-chap-core version. Useful on a demo/ops dashboard to see the system is alive.
+status (auto-refreshing every 30s), plus the running chap-core version in the
+footer. Useful on a demo/ops dashboard to see the system is alive.
 
 ## Config schema (`src/config.ts`)
 
@@ -23,7 +23,6 @@ chap-core version. Useful on a demo/ops dashboard to see the system is alive.
 ## CHAP endpoints used
 
 - `GET /v1/jobs` — recent jobs with status
-- `GET /v1/crud/configured-models` — configured model list
 - `GET /system/info` — chap-core version footer
 
 ## Files
@@ -31,7 +30,7 @@ chap-core version. Useful on a demo/ops dashboard to see the system is alive.
 - `src/Plugin.tsx` — dashboard entrypoint: providers + `WidgetShell` wiring (rarely needs edits)
 - `src/config.ts` — zod config schema
 - `src/ConfigForm.tsx` — edit-mode form (job limit)
-- `src/WidgetView.tsx` — view-mode status tables
+- `src/WidgetView.tsx` — view-mode recent-jobs table
 - `src/App.tsx` — standalone dev harness for `pnpm start` (not shown on dashboards)
 
 ## Commands

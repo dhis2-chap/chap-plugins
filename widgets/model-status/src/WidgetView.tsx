@@ -1,6 +1,5 @@
 import {
     JobsService,
-    ModelsService,
     useChapSystemInfo,
     LoadingState,
     ErrorState,
@@ -41,8 +40,8 @@ const formatTime = (isoTimestamp: string | null) => {
 }
 
 /**
- * Operational overview of the CHAP backend: recent jobs with status, the
- * configured models, and the chap-core version.
+ * Operational overview of the CHAP backend: recent jobs with status and the
+ * chap-core version.
  */
 export const WidgetView = ({ config }: { config: Config }) => {
     const jobsQuery = useQuery({
@@ -50,15 +49,9 @@ export const WidgetView = ({ config }: { config: Config }) => {
         queryFn: () => JobsService.listJobsV1JobsGet(),
         refetchInterval: JOBS_REFRESH_MS,
     })
-    const modelsQuery = useQuery({
-        queryKey: ['chap', 'configured-models'],
-        queryFn: () =>
-            ModelsService.listConfiguredModelsV1CrudConfiguredModelsGet(),
-        staleTime: 5 * 60 * 1000,
-    })
     const systemInfoQuery = useChapSystemInfo()
 
-    if (jobsQuery.isLoading || modelsQuery.isLoading) {
+    if (jobsQuery.isLoading) {
         return <LoadingState />
     }
     if (jobsQuery.isError) {
@@ -72,11 +65,9 @@ export const WidgetView = ({ config }: { config: Config }) => {
     const jobs = [...(jobsQuery.data ?? [])]
         .sort((a, b) => (b.start_time ?? '').localeCompare(a.start_time ?? ''))
         .slice(0, config.jobLimit)
-    const models = modelsQuery.data ?? []
 
     return (
         <div className={styles.view}>
-            <h4 className={styles.heading}>{i18n.t('Recent jobs')}</h4>
             {jobs.length === 0 ? (
                 <p className={styles.empty}>
                     {i18n.t('No jobs have run yet.')}
@@ -115,16 +106,6 @@ export const WidgetView = ({ config }: { config: Config }) => {
                     </DataTableBody>
                 </DataTable>
             )}
-            <h4 className={styles.heading}>
-                {i18n.t('Configured models ({{count}})', {
-                    count: models.length,
-                })}
-            </h4>
-            <ul className={styles.modelList}>
-                {models.map((model) => (
-                    <li key={model.name}>{model.displayName ?? model.name}</li>
-                ))}
-            </ul>
             <div className={styles.footer}>
                 {i18n.t('chap-core {{version}}', {
                     version: systemInfoQuery.data?.chap_core_version ?? '…',
