@@ -114,6 +114,16 @@ dashboard.seed.json directly — the fastest layout/config loop, no deploy.
   Pair the hook with `MissingPredictionState` in the view and
   `PredictionSelectField` in the form; don't hand-roll the picker, the
   newest-run sort, or a second `['chap', 'predictions']` query.
+- **Deep links into the modeling app** go through `OpenInModelingButton` with
+  a link from `shared/src/modeling/modelingLinks.ts`. The app's launch URL is
+  resolved from `/api/apps` by its `app_hub_id`, so the button simply doesn't
+  render where the modeling app isn't installed — never hardcode the app key.
+  Only add a link that lands on the _exact_ thing the widget shows. The four
+  prediction widgets have none: the run page is
+  `#/predictions/:predictionSetupId/runs/:predictionId`, and `PredictionInfo`
+  doesn't carry the setup id (chap-core keeps `prediction_setup_id` on the row
+  but omits it from the read model — ticketed). It's nullable too, so ad-hoc
+  predictions will never have a run page.
 - Standard quantiles everywhere: `[0.1, 0.25, 0.5, 0.75, 0.9]`
   (`STANDARD_QUANTILES`). The fan chart maps 0.25/0.75 → 50% band,
   0.1/0.9 → 80% band.

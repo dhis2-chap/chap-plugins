@@ -11,6 +11,10 @@ An operational overview of the CHAP backend: the most recent jobs with their
 status (auto-refreshing every 30s), plus the running chap-core version in the
 footer. Useful on a demo/ops dashboard to see the system is alive.
 
+A corner button opens the modeling app's **Jobs** page in a new tab — the full
+version of this same list. It appears only when the modeling app is installed
+on the instance.
+
 ## Config schema (`src/config.ts`)
 
 | field      | type      | meaning                          |

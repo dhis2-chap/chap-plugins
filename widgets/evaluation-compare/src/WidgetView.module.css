@@ -1,4 +1,6 @@
 .view {
+    /* Anchors OpenInModelingButton's absolute corner placement */
+    position: relative;
     padding: 8px 12px 12px;
 }
 
@@ -6,4 +8,6 @@
     font-size: 13px;
     color: var(--colors-grey700);
     margin-bottom: 4px;
+    /* Keeps a long backtest name clear of the corner button */
+    padding-right: 32px;
 }

@@ -25,6 +25,11 @@ prediction — median line and bands — along a stationary chart of the actual
 cases, the way the modeling app's evaluation comparison behaves. The slider is
 hidden when the backtest has just one split.
 
+A corner button opens this exact comparison in the modeling app in a new tab —
+same backtest, org unit and split, taking the _scrubbed_ split rather than the
+configured one, so the app opens on whatever the viewer is looking at. It
+appears only when the modeling app is installed on the instance.
+
 ## Config schema (`src/config.ts`)
 
 | field         | type      | meaning                                            |

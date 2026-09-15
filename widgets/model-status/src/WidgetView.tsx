@@ -3,6 +3,8 @@ import {
     useChapSystemInfo,
     LoadingState,
     ErrorState,
+    OpenInModelingButton,
+    jobsLink,
 } from '@chap-widgets/shared'
 import i18n from '@dhis2/d2-i18n'
 import {
@@ -68,6 +70,10 @@ export const WidgetView = ({ config }: { config: Config }) => {
 
     return (
         <div className={styles.view}>
+            <OpenInModelingButton
+                label={i18n.t('Open jobs in Modeling')}
+                link={jobsLink()}
+            />
             {jobs.length === 0 ? (
                 <p className={styles.empty}>
                     {i18n.t('No jobs have run yet.')}

@@ -7,6 +7,8 @@ import {
     LoadingState,
     PassiveState,
     ErrorState,
+    OpenInModelingButton,
+    evaluationCompareLink,
     STANDARD_QUANTILES,
     type EvaluationEntry,
 } from '@chap-widgets/shared'
@@ -189,6 +191,16 @@ export const WidgetView = ({ config }: { config: Config }) => {
 
     return (
         <div className={styles.view}>
+            <OpenInModelingButton
+                label={i18n.t('Open evaluation in Modeling')}
+                link={evaluationCompareLink({
+                    backtestId: config.backtestId,
+                    orgUnitId: config.orgUnitId,
+                    // The scrubbed split, not the configured one, so the app
+                    // opens on the forecast the viewer is actually looking at
+                    splitPeriod: splitPeriods[selectedIndex],
+                })}
+            />
             <div className={styles.subtitle}>
                 {config.orgUnitName ?? config.orgUnitId} — {backtestName}
                 {hasSlider

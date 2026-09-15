@@ -1,0 +1,88 @@
+/*
+ * Icon at rest, label on hover: the widget keeps its whole area for the
+ * visualization until someone reaches for the button. Anchored on the right
+ * so the label grows leftward, into empty space rather than over the chart.
+ */
+.button {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    /* Never wider than the widget, however narrow the dashboard item gets */
+    max-width: calc(100% - 8px);
+    padding: 0 4px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    color: var(--colors-grey600, #6e7a8a);
+    background: var(--colors-white, #fff);
+    text-decoration: none;
+    transition:
+        color 150ms ease,
+        border-color 150ms ease,
+        box-shadow 150ms ease;
+}
+
+.button:hover,
+.button:focus-visible {
+    color: var(--colors-blue700, #1565c0);
+    border-color: var(--colors-grey300, #d5dde5);
+    box-shadow: 0 1px 3px rgba(33, 41, 52, 0.12);
+}
+
+.button:focus-visible {
+    outline: 2px solid var(--colors-blue600, #1976d2);
+    outline-offset: 1px;
+}
+
+.label {
+    max-width: 0;
+    overflow: hidden;
+    padding-left: 0;
+    font-size: 12px;
+    line-height: 1;
+    white-space: nowrap;
+    opacity: 0;
+    transition:
+        max-width 150ms ease,
+        opacity 150ms ease,
+        padding-left 150ms ease;
+}
+
+.button:hover .label,
+.button:focus-visible .label {
+    max-width: 160px;
+    padding-left: 4px;
+    opacity: 1;
+}
+
+/* The label is what gives when space runs out, never the icon */
+.button svg {
+    flex: none;
+}
+
+/* Touch devices get no hover, so show the label outright rather than
+   leaving a bare icon whose destination is a guess */
+@media (hover: none) {
+    .label {
+        max-width: 160px;
+        padding-left: 4px;
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .button,
+    .label {
+        transition: none;
+    }
+}
+
+/* A link is dead weight on paper */
+@media print {
+    .button {
+        display: none;
+    }
+}

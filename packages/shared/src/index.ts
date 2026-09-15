@@ -38,6 +38,18 @@ export type {
 export { ThresholdParamsFields } from './chap/ThresholdParamsFields'
 export type { ThresholdParamsFieldsProps } from './chap/ThresholdParamsFields'
 
+// Modeling app deep links
+export {
+    MODELING_APP_HUB_ID,
+    evaluationCompareLink,
+    jobsLink,
+    modelingAppUrl,
+} from './modeling/modelingLinks'
+export type { EvaluationCompareLinkParams } from './modeling/modelingLinks'
+export { useModelingAppUrl } from './modeling/useModelingAppUrl'
+export { OpenInModelingButton } from './modeling/OpenInModelingButton'
+export type { OpenInModelingButtonProps } from './modeling/OpenInModelingButton'
+
 // Dashboard plugin shell
 export type { DashboardPluginProps } from './plugin/types'
 export { WidgetShell } from './plugin/WidgetShell'
