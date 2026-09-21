@@ -43,6 +43,9 @@ additionally deploy every widget to the demo instance and then run
 `pnpm seed:demo` to refresh the "CHAP Widgets" dashboard there (repo variable
 `DHIS2_DEMO_URL` + secrets `DHIS2_DEMO_USERNAME`/`DHIS2_DEMO_PASSWORD`;
 skipped with a notice until those are set).
+`nightly-demo.yml` runs `pnpm deploy:demo --dashboard widget-demo` at 03:00
+UTC every night (same variable/secret set, also runnable from the Actions
+tab), refreshing the personal `widget-demo` copy of the seed dashboard.
 
 ## The rules
 

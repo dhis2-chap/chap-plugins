@@ -1,0 +1,33 @@
+name: Nightly demo dashboard
+
+on:
+    schedule:
+        - cron: '0 3 * * *'
+    workflow_dispatch:
+
+concurrency:
+    group: deploy-demo
+    cancel-in-progress: false
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: pnpm/action-setup@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+                  cache: pnpm
+            - run: pnpm install --frozen-lockfile
+            - name: Deploy all widgets and refresh the widget-demo dashboard
+              if: vars.DHIS2_DEMO_URL != ''
+              env:
+                  DHIS2_DEMO_URL: ${{ vars.DHIS2_DEMO_URL }}
+                  D2_USERNAME: ${{ secrets.DHIS2_DEMO_USERNAME }}
+                  D2_PASSWORD: ${{ secrets.DHIS2_DEMO_PASSWORD }}
+              run: pnpm deploy:demo --dashboard widget-demo
+            - name: Nightly demo deploy skipped
+              if: vars.DHIS2_DEMO_URL == ''
+              run: |
+                  echo "::notice::Nightly demo deploy skipped — set the repository variable DHIS2_DEMO_URL and the secrets DHIS2_DEMO_USERNAME / DHIS2_DEMO_PASSWORD to enable it."
