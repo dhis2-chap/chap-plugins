@@ -16,8 +16,9 @@ export class ModelsService {
      * List every live model template that can be configured into a runnable model — one per template name; superseded versions keep their rows but are not listed.
      *
      * Acts as the discovery endpoint: it is also where the CHAPKit v2 service registry
-     * gets pulled in, so a template's ``health_status = "live"`` reflects whether the
-     * backing CHAPKit service is currently registered. Stale CHAPKit templates whose
+     * gets pulled in, so a template's ``health_status`` reflects whether the backing
+     * CHAPKit service is currently registered (``"live"``) and still runs the stored
+     * source revision (``"revision_mismatch"`` otherwise). Stale CHAPKit templates whose
      * services have disappeared are auto-archived as a side effect.
      * @returns ModelTemplateRead Successful Response
      * @throws ApiError
@@ -35,6 +36,7 @@ export class ModelsService {
      * Use this to populate model pickers in backtest / prediction creation flows. Each
      * entry carries the configuration values along with template metadata so you can
      * surface "Model X (CRPS-tuned, 12 lags, ERA5)" or similar in a UI.
+     * Health is read from the service registry without syncing or archiving templates.
      * @returns ModelSpecRead Successful Response
      * @throws ApiError
      */

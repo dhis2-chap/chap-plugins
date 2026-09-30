@@ -1,8 +1,4 @@
-import type {
-    PercentileParams,
-    SeasonalParams,
-    ThresholdResponse,
-} from '../chap-api'
+import type { ThresholdResponse } from '../chap-api'
 // Explicit extension so `node --test` can load this module's tests directly
 import { canonicalizePeriodId } from '../charts/periods.ts'
 
@@ -15,43 +11,30 @@ export type ThresholdLineRoles = {
 /** orgUnit → canonical period id → upper threshold */
 export type ThresholdMap = Map<string, Map<string, number>>
 
-const getLineParameter = (
-    params: SeasonalParams | PercentileParams
-): number | Array<number> | undefined => {
-    if ('quantile' in params && params.quantile !== undefined) {
-        return params.quantile
-    }
-    if ('stdMultiplier' in params && params.stdMultiplier !== undefined) {
-        return params.stdMultiplier
-    }
-    return undefined
-}
-
 /**
  * Work out which line of a threshold entry is the alert threshold.
  *
  * A request can ask for several lines at once (`quantile: [0.25, 0.75]` is the
- * endemic channel's band), and each entry's `values` follow the order of that
- * list. Derive the roles from the params the *response* echoes back, never
- * from the params that were requested: a response in flight belongs to the
- * previous request, and reading it with the new roles silently mislabels
- * which line is the threshold.
+ * endemic channel's band), and the response's `lines` states the parameter
+ * value behind each position of every entry's `values`. Derive the roles from
+ * the *response*, never from the params that were requested: a response in
+ * flight belongs to the previous request, and reading it with the new roles
+ * silently mislabels which line is the threshold.
  */
 export const getThresholdLineRoles = (
-    params: SeasonalParams | PercentileParams
+    lines: Array<number>
 ): ThresholdLineRoles => {
-    const lineParameter = getLineParameter(params)
-    if (!Array.isArray(lineParameter) || lineParameter.length < 2) {
+    if (lines.length < 2) {
         return { upperIndex: 0 }
     }
 
     let lowerIndex = 0
     let upperIndex = 0
-    lineParameter.forEach((value, index) => {
-        if (value < lineParameter[lowerIndex]) {
+    lines.forEach((value, index) => {
+        if (value < lines[lowerIndex]) {
             lowerIndex = index
         }
-        if (value > lineParameter[upperIndex]) {
+        if (value > lines[upperIndex]) {
             upperIndex = index
         }
     })
@@ -72,7 +55,7 @@ export const getThresholdLineRoles = (
 export const buildThresholdMap = (
     response: ThresholdResponse
 ): ThresholdMap => {
-    const { upperIndex } = getThresholdLineRoles(response.params)
+    const { upperIndex } = getThresholdLineRoles(response.lines)
     const map: ThresholdMap = new Map()
 
     for (const entry of response.entries) {
