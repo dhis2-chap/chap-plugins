@@ -46,6 +46,13 @@ and configs as the seed (rerunning updates it in place). Use
 `pnpm seed:local --dashboard edvin` to refresh just the dashboard without
 rebuilding.
 
+Non-admin users only see a widget if one of their user roles has that
+widget's app authority (`M_chapwidget<name>`, created when the app is
+installed) — otherwise the plugin 404s even on a shared dashboard. Add
+`--grant-roles` to a seed/deploy run to add those authorities to every role
+that can open the Dashboard app, and `--star` to star the dashboard for the
+deploying user.
+
 For layout work there's also a local board: `pnpm board` renders every
 widget on one drag/resize grid straight from source (no deploy needed) and
 autosaves the arrangement — plus each widget's live config — back into
@@ -75,3 +82,7 @@ its contract.
   `DHIS2_DEMO_URL` and the secrets `DHIS2_DEMO_USERNAME` /
   `DHIS2_DEMO_PASSWORD` to enable it; until then the deploy step skips with
   a notice. Manually: `DHIS2_DEMO_URL=… D2_USERNAME=… D2_PASSWORD=… pnpm deploy:demo`.
+- **Nightly demo**: the demo instance resets every night, so
+  `nightly-demo.yml` redeploys at 02:15 UTC and recreates a starred
+  "CHAP Plugins" dashboard, with the widget authorities granted to every
+  Dashboard-app role.

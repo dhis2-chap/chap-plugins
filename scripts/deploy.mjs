@@ -15,7 +15,8 @@
  * smoke test failed, so failures are re-checked against /api/apps.
  * Pass --dashboard <name> to additionally create/overwrite a personal copy
  * of the seed dashboard named <name> (all widgets, seed layout + configs)
- * after a fully successful deploy — see scripts/seed.mjs.
+ * after a fully successful deploy — see scripts/seed.mjs. --star and
+ * --grant-roles are passed through to that seed step.
  */
 import { execFileSync } from 'node:child_process'
 import path from 'node:path'
@@ -43,12 +44,19 @@ try {
     process.exit(1)
 }
 const skipBuild = restArgs.includes('--no-build')
+const seedFlags = restArgs.filter(
+    (arg) => arg === '--star' || arg === '--grant-roles'
+)
+if (seedFlags.length > 0 && dashboardName === null) {
+    console.error(`deploy: ${seedFlags.join(' ')} needs --dashboard <name>`)
+    process.exit(1)
+}
 const positional = restArgs.filter((arg) => !arg.startsWith('--'))
 const [target, ...requestedWidgets] = positional
 
 if (!target) {
     console.error(
-        'Usage: node scripts/deploy.mjs <local|demo|url> [widget…] [--no-build] [--dashboard <name>]'
+        'Usage: node scripts/deploy.mjs <local|demo|url> [widget…] [--no-build] [--dashboard <name> [--star] [--grant-roles]]'
     )
     process.exit(1)
 }
@@ -161,6 +169,7 @@ if (dashboardName !== null) {
                 target,
                 '--dashboard',
                 dashboardName,
+                ...seedFlags,
             ],
             repoRoot
         )

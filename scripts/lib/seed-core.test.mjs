@@ -11,10 +11,12 @@ import {
     deterministicUid,
     generateUid,
     mergePulledDashboard,
+    rolesMissingAuthorities,
     serializeSeed,
     sortItems,
     validateSeed,
     widgetAppKey,
+    widgetAuthority,
 } from './seed-core.mjs'
 
 const validSeed = () => ({
@@ -352,4 +354,33 @@ test('deriveNamedSeed does not mutate its input', () => {
     const seed = validSeed()
     deriveNamedSeed(seed, 'edvin')
     assert.deepEqual(seed, validSeed())
+})
+
+test('widgetAuthority is M_ plus the app key without separators', () => {
+    assert.equal(
+        widgetAuthority('prediction-chart'),
+        'M_chapwidgetpredictionchart'
+    )
+})
+
+test('rolesMissingAuthorities picks Dashboard-app roles lacking widgets', () => {
+    const roles = [
+        { id: 'r1', name: 'Viewer', authorities: ['M_dhis-web-dashboard'] },
+        {
+            id: 'r2',
+            name: 'Partial',
+            authorities: ['M_dhis-web-dashboard', 'M_a'],
+        },
+        {
+            id: 'r3',
+            name: 'Done',
+            authorities: ['M_dhis-web-dashboard', 'M_a', 'M_b'],
+        },
+        { id: 'r4', name: 'Superuser', authorities: ['ALL'] },
+        { id: 'r5', name: 'Capture only', authorities: ['M_capture'] },
+    ]
+    assert.deepEqual(rolesMissingAuthorities(roles, ['M_a', 'M_b']), [
+        { id: 'r1', name: 'Viewer', missing: ['M_a', 'M_b'] },
+        { id: 'r2', name: 'Partial', missing: ['M_b'] },
+    ])
 })

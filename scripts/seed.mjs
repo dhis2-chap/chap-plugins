@@ -8,6 +8,7 @@
  *   node scripts/seed.mjs [local|demo|url]           # push (default: local)
  *   node scripts/seed.mjs --pull [local|demo|url]    # pull layout + configs
  *   node scripts/seed.mjs [target] --dashboard <name>  # push a named copy
+ *   node scripts/seed.mjs [target] … --star --grant-roles
  *
  * Push REPLACES the seed-owned dashboard (found by dashboard.code) — its
  * layout and every item's datastore config. It never touches other
@@ -17,6 +18,13 @@
  * named <name> (code CHAP_WIDGETS_<SLUG>, item ids derived from code +
  * widget so reruns overwrite in place). The seed file is left untouched and
  * the seed-owned dashboard is not modified. Pull does not support it.
+ *
+ * --star stars the pushed dashboard for the pushing user, so a freshly
+ * reset instance opens on it. --grant-roles adds every widget's app
+ * authority (M_chapwidget…) to each user role that can open the Dashboard
+ * app, so non-admin users see the widgets too; without it they get a 404
+ * for each plugin even on a dashboard shared with them. Both are additive
+ * and safe to rerun. Neither applies to --pull.
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
@@ -28,8 +36,10 @@ import {
     buildDashboardItems,
     deriveNamedSeed,
     mergePulledDashboard,
+    rolesMissingAuthorities,
     serializeSeed,
     validateSeed,
+    widgetAuthority,
 } from './lib/seed-core.mjs'
 import { resolveTarget } from './lib/targets.mjs'
 import { discoverWidgets } from './lib/widgets.mjs'
@@ -57,9 +67,11 @@ try {
     process.exit(1)
 }
 const pullMode = restArgs.includes('--pull')
-if (pullMode && dashboardName !== null) {
+const star = restArgs.includes('--star')
+const grantRoles = restArgs.includes('--grant-roles')
+if (pullMode && (dashboardName !== null || star || grantRoles)) {
     console.error(
-        'seed: --pull --dashboard is not supported — pull only targets the seed-owned dashboard'
+        'seed: --pull only takes a target — --dashboard, --star and --grant-roles apply to push'
     )
     process.exit(1)
 }
@@ -80,16 +92,17 @@ if (!username || !password) {
     process.exit(1)
 }
 
-const api = (pathname, { method = 'GET', body } = {}) =>
+const api = (
+    pathname,
+    { method = 'GET', body, contentType = 'application/json' } = {}
+) =>
     fetch(`${url}/api/${pathname}`, {
         method,
         headers: {
             Authorization: `Basic ${Buffer.from(
                 `${username}:${password}`
             ).toString('base64')}`,
-            ...(body !== undefined
-                ? { 'Content-Type': 'application/json' }
-                : {}),
+            ...(body !== undefined ? { 'Content-Type': contentType } : {}),
         },
         body: body !== undefined ? JSON.stringify(body) : undefined,
     })
@@ -176,6 +189,50 @@ const upsertConfig = async (itemId, config) => {
     }
 }
 
+// Idempotent: DHIS2 keeps favorites as a set.
+const starDashboard = async (dashboardId) => {
+    const response = await api(`dashboards/${dashboardId}/favorite`, {
+        method: 'POST',
+    })
+    if (!response.ok) {
+        const text = await response.text()
+        throw new Error(
+            `POST /api/dashboards/${dashboardId}/favorite → ${response.status}: ${text.slice(0, 300)}`
+        )
+    }
+}
+
+// JSON Patch appends to the role's authorities without rewriting the rest
+// of the role, so nothing else about it can be clobbered.
+const grantWidgetAuthorities = async (widgets) => {
+    const data = await apiJson(
+        'userRoles.json?fields=id,name,authorities&paging=false'
+    )
+    const pending = rolesMissingAuthorities(
+        data.userRoles ?? [],
+        widgets.map(widgetAuthority)
+    )
+    for (const role of pending) {
+        await apiJson(`userRoles/${role.id}`, {
+            method: 'PATCH',
+            contentType: 'application/json-patch+json',
+            body: role.missing.map((authority) => ({
+                op: 'add',
+                path: '/authorities/-',
+                value: authority,
+            })),
+        })
+        console.log(
+            `▸ Granted ${role.missing.length} widget authorit${role.missing.length === 1 ? 'y' : 'ies'} to role "${role.name}"`
+        )
+    }
+    if (pending.length === 0) {
+        console.log(
+            '▸ Every Dashboard-app role already has the widget authorities'
+        )
+    }
+}
+
 const push = async () => {
     const { seed: canonical, added } = autoAddWidgets(
         loadSeed(),
@@ -213,6 +270,15 @@ const push = async () => {
     } else {
         await apiJson('dashboards', { method: 'POST', body: payload })
         console.log(`▸ Created dashboard "${seed.dashboard.name}" on ${url}`)
+    }
+    if (star) {
+        const dashboardId =
+            existingId ?? (await findDashboardId(seed.dashboard.code))
+        await starDashboard(dashboardId)
+        console.log(`▸ Starred "${seed.dashboard.name}" for ${username}`)
+    }
+    if (grantRoles) {
+        await grantWidgetAuthorities(seed.items.map((item) => item.widget))
     }
 
     const results = []

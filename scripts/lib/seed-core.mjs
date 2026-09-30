@@ -77,6 +77,36 @@ export const appKeyToWidget = (appKey) =>
         ? appKey.slice(APP_KEY_PREFIX.length)
         : null
 
+/**
+ * The module authority DHIS2 generates when it installs an app: `M_` plus
+ * the app key with every non-alphanumeric dropped. Users without it get a
+ * 404 for the plugin, even on a dashboard shared with them.
+ */
+export const widgetAuthority = (widget) =>
+    `M_${widgetAppKey(widget).replace(/[^A-Za-z0-9]/g, '')}`
+
+/**
+ * Which user roles need which widget authorities so that everyone who can
+ * open the Dashboard app also sees the widgets. `ALL` roles already see
+ * everything; roles without the Dashboard app have nowhere to see them.
+ * Returns [{ id, name, missing }] for roles that lack at least one.
+ */
+export const rolesMissingAuthorities = (roles, authorities) =>
+    roles
+        .filter(
+            (role) =>
+                !role.authorities.includes('ALL') &&
+                role.authorities.includes('M_dhis-web-dashboard')
+        )
+        .map((role) => ({
+            id: role.id,
+            name: role.name,
+            missing: authorities.filter(
+                (authority) => !role.authorities.includes(authority)
+            ),
+        }))
+        .filter((role) => role.missing.length > 0)
+
 const WIDGET_NAME_RE = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/
 
 const fail = (message) => {
