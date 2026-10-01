@@ -2,8 +2,12 @@ name: Nightly demo dashboard
 
 on:
     schedule:
-        # 04:15 in Oslo summer time (03:15 in winter) — cron runs in UTC
+        # 04:15 in Oslo summer time (03:15 in winter) — cron runs in UTC.
+        # GitHub drops scheduled runs now and then (it skipped the first
+        # night entirely), so a second slot re-runs it two hours later; the
+        # deploy is idempotent, so a double run just reinstalls the same thing.
         - cron: '15 2 * * *'
+        - cron: '15 4 * * *'
     workflow_dispatch:
 
 concurrency:

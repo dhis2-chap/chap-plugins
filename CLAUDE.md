@@ -46,7 +46,7 @@ additionally deploy every widget to the demo instance and then run
 skipped with a notice until those are set).
 `nightly-demo.yml` runs
 `pnpm deploy:demo --dashboard "CHAP Plugins" --star --grant-roles` at 02:15
-UTC every night (same variable/secret set, also runnable from the Actions
+UTC every night, with a 04:15 UTC backup slot because GitHub sometimes drops scheduled runs (same variable/secret set, also runnable from the Actions
 tab): the demo instance resets nightly, so this reinstalls every widget,
 recreates the "CHAP Plugins" copy of the seed dashboard, stars it for the
 deploy user, and grants the widget app authorities to every role that can

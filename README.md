@@ -83,6 +83,6 @@ its contract.
   `DHIS2_DEMO_PASSWORD` to enable it; until then the deploy step skips with
   a notice. Manually: `DHIS2_DEMO_URL=… D2_USERNAME=… D2_PASSWORD=… pnpm deploy:demo`.
 - **Nightly demo**: the demo instance resets every night, so
-  `nightly-demo.yml` redeploys at 02:15 UTC and recreates a starred
+  `nightly-demo.yml` redeploys at 02:15 UTC (backup slot 04:15 — GitHub sometimes drops scheduled runs) and recreates a starred
   "CHAP Plugins" dashboard, with the widget authorities granted to every
   Dashboard-app role.
