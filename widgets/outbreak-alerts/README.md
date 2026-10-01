@@ -1,8 +1,8 @@
 # CHAP · Outbreak Alerts
 
 <!--
-WIDGET CONTRACT — keep this section accurate; it is what humans and AI agents
-read to understand the widget without reading the code.
+PLUGIN CONTRACT — keep this section accurate; it is what humans and AI agents
+read to understand the plugin without reading the code.
 -->
 
 ## What it shows
@@ -25,7 +25,7 @@ endemic-channel percentile band), computed from the prediction's own dataset
 history — so the table agrees with the outbreak map and with the modeling app's
 prediction charts.
 
-With `predictionId: 'latest'` the widget ranks whichever prediction CHAP ran
+With `predictionId: 'latest'` the plugin ranks whichever prediction CHAP ran
 most recently and re-checks every five minutes, so a dashboard left open picks
 up new runs on its own. Pin it to an id to hold it on one prediction.
 
@@ -34,13 +34,13 @@ up new runs on its own. Pin it to an id to hold it on one prediction.
 | field          | type                 | meaning                                              |
 | -------------- | -------------------- | ---------------------------------------------------- |
 | `version`      | `1`                  | config schema version                                |
-| `widget`       | literal              | widget discriminator                                 |
+| `widget`       | literal              | plugin discriminator                                 |
 | `title`        | `string?`            | dashboard item title override                        |
 | `predictionId` | `'latest' \| number` | `'latest'` follows the newest run; a number pins one |
 | `threshold`    | discriminated union  | endemic-threshold strategy + params (see below)      |
 
 `predictionId` is `PredictionSelectionSchema` from `@chap-widgets/shared`, the
-same field every prediction-backed widget uses.
+same field every prediction-backed plugin uses.
 
 `threshold` is `ThresholdParamsSchema` from `@chap-widgets/shared`, shared with
 outbreak-map and mirroring the modeling app's `ThresholdParams`:

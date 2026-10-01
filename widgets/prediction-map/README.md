@@ -1,8 +1,8 @@
 # CHAP · Prediction Map
 
 <!--
-WIDGET CONTRACT — keep this section accurate; it is what humans and AI agents
-read to understand the widget without reading the code.
+PLUGIN CONTRACT — keep this section accurate; it is what humans and AI agents
+read to understand the plugin without reading the code.
 -->
 
 ## What it shows
@@ -30,13 +30,13 @@ instead of being presented as an isolated cluster. The ancestor's DHIS2
 | field          | type                       | meaning                                              |
 | -------------- | -------------------------- | ---------------------------------------------------- |
 | `version`      | `1`                        | config schema version                                |
-| `widget`       | literal                    | widget discriminator                                 |
+| `widget`       | literal                    | plugin discriminator                                 |
 | `title`        | `string?`                  | dashboard item title override                        |
 | `predictionId` | `'latest' \| number`       | `'latest'` follows the newest run; a number pins one |
 | `showBasemap`  | `boolean` (default `true`) | OpenStreetMap raster tiles under the choropleth      |
 
 `predictionId` is `PredictionSelectionSchema` from `@chap-widgets/shared`, the
-same field every prediction-backed widget uses.
+same field every prediction-backed plugin uses.
 
 ## CHAP endpoints used
 

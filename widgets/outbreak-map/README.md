@@ -1,8 +1,8 @@
 # CHAP · Outbreak Map
 
 <!--
-WIDGET CONTRACT — keep this section accurate; it is what humans and AI agents
-read to understand the widget without reading the code.
+PLUGIN CONTRACT — keep this section accurate; it is what humans and AI agents
+read to understand the plugin without reading the code.
 -->
 
 ## What it shows
@@ -27,7 +27,7 @@ defaults as the modeling app** (seasonal mean + 2σ by default, or the WHO
 endemic-channel percentile band), computed from the prediction's own dataset
 history for exactly the periods and org units on the map. An org unit with too
 little history gets no threshold and is drawn in the "no threshold" grey rather
-than being silently reported as safe. By default the widget follows the
+than being silently reported as safe. By default the plugin follows the
 **latest** prediction (most recent `created`); a specific prediction can be
 pinned instead.
 
@@ -42,7 +42,7 @@ to it.
 | field          | type                       | meaning                                              |
 | -------------- | -------------------------- | ---------------------------------------------------- |
 | `version`      | `1`                        | config schema version                                |
-| `widget`       | literal                    | widget discriminator                                 |
+| `widget`       | literal                    | plugin discriminator                                 |
 | `title`        | `string?`                  | dashboard item title override                        |
 | `predictionId` | `'latest' \| number`       | `'latest'` follows the newest run; a number pins one |
 | `showBasemap`  | `boolean` (default `true`) | OpenStreetMap raster tiles under the choropleth      |
@@ -62,7 +62,7 @@ params match the modeling app's endemic-channel band one-for-one. Which line is
 upper is read from the params the response echoes back, never from the request.
 
 `predictionId` is `PredictionSelectionSchema` from `@chap-widgets/shared`, the
-same field every prediction-backed widget uses.
+same field every prediction-backed plugin uses.
 
 ## CHAP endpoints used
 

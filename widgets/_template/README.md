@@ -1,13 +1,13 @@
 # CHAP · Template
 
 <!--
-WIDGET CONTRACT — keep this section accurate; it is what humans and AI agents
-read to understand the widget without reading the code.
+PLUGIN CONTRACT — keep this section accurate; it is what humans and AI agents
+read to understand the plugin without reading the code.
 -->
 
 ## What it shows
 
-Template widget. Replace this with one or two sentences describing the
+Template plugin. Replace this with one or two sentences describing the
 visualization and the decision it supports.
 
 ## Config schema (`src/config.ts`)
@@ -15,7 +15,7 @@ visualization and the decision it supports.
 | field     | type      | meaning                       |
 | --------- | --------- | ----------------------------- |
 | `version` | `1`       | config schema version         |
-| `widget`  | literal   | widget discriminator          |
+| `widget`  | literal   | plugin discriminator          |
 | `title`   | `string?` | dashboard item title override |
 
 ## CHAP endpoints used

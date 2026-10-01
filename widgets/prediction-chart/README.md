@@ -1,8 +1,8 @@
 # CHAP · Prediction Chart
 
 <!--
-WIDGET CONTRACT — keep this section accurate; it is what humans and AI agents
-read to understand the widget without reading the code.
+PLUGIN CONTRACT — keep this section accurate; it is what humans and AI agents
+read to understand the plugin without reading the code.
 -->
 
 ## What it shows
@@ -11,7 +11,7 @@ A prediction fan chart for one org unit: recent observed cases, the CHAP
 model's median forecast, and its 50%/80% prediction interval bands. The
 dashboard equivalent of the modeling app's prediction result view.
 
-With `predictionId: 'latest'` the widget renders whichever prediction CHAP ran
+With `predictionId: 'latest'` the plugin renders whichever prediction CHAP ran
 most recently and re-checks every five minutes, so a dashboard left open picks
 up new runs on its own. Pin it to an id to hold it on one prediction.
 
@@ -20,14 +20,14 @@ up new runs on its own. Pin it to an id to hold it on one prediction.
 | field          | type                 | meaning                                              |
 | -------------- | -------------------- | ---------------------------------------------------- |
 | `version`      | `1`                  | config schema version                                |
-| `widget`       | literal              | widget discriminator                                 |
+| `widget`       | literal              | plugin discriminator                                 |
 | `title`        | `string?`            | dashboard item title override                        |
 | `predictionId` | `'latest' \| number` | `'latest'` follows the newest run; a number pins one |
 | `orgUnitId`    | `string`             | org unit to plot                                     |
 | `orgUnitName`  | `string?`            | display-name snapshot taken at config time           |
 
 `predictionId` is `PredictionSelectionSchema` from `@chap-widgets/shared`, the
-same field every prediction-backed widget uses.
+same field every prediction-backed plugin uses.
 
 ## CHAP endpoints used
 

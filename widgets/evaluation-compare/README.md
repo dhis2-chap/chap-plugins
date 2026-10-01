@@ -1,8 +1,8 @@
 # CHAP · Evaluation Compare
 
 <!--
-WIDGET CONTRACT — keep this section accurate; it is what humans and AI agents
-read to understand the widget without reading the code.
+PLUGIN CONTRACT — keep this section accurate; it is what humans and AI agents
+read to understand the plugin without reading the code.
 -->
 
 ## What it shows
@@ -35,7 +35,7 @@ appears only when the modeling app is installed on the instance.
 | field         | type      | meaning                                            |
 | ------------- | --------- | -------------------------------------------------- |
 | `version`     | `1`       | config schema version                              |
-| `widget`      | literal   | widget discriminator                               |
+| `widget`      | literal   | plugin discriminator                               |
 | `title`       | `string?` | dashboard item title override                      |
 | `backtestId`  | `number`  | CHAP backtest (evaluation) to plot                 |
 | `orgUnitId`   | `string`  | org unit to plot                                   |

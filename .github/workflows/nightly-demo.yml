@@ -25,7 +25,7 @@ jobs:
                   node-version: 22
                   cache: pnpm
             - run: pnpm install --frozen-lockfile
-            - name: Deploy all widgets and refresh the CHAP Plugins dashboard
+            - name: Deploy all plugins and refresh the CHAP Plugins dashboard
               if: vars.DHIS2_DEMO_URL != ''
               env:
                   DHIS2_DEMO_URL: ${{ vars.DHIS2_DEMO_URL }}
