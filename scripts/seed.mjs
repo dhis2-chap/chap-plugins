@@ -8,7 +8,7 @@
  *   node scripts/seed.mjs [local|demo|url]           # push (default: local)
  *   node scripts/seed.mjs --pull [local|demo|url]    # pull layout + configs
  *   node scripts/seed.mjs [target] --dashboard <name>  # push a named copy
- *   node scripts/seed.mjs [target] … --star --grant-roles
+ *   node scripts/seed.mjs [target] … --star --star-for <user> --grant-roles
  *
  * Push REPLACES the seed-owned dashboard (found by dashboard.code) — its
  * layout and every item's datastore config. It never touches other
@@ -20,16 +20,18 @@
  * the seed-owned dashboard is not modified. Pull does not support it.
  *
  * --star stars the pushed dashboard for the pushing user, so a freshly
- * reset instance opens on it. --grant-roles adds every widget's app
+ * reset instance opens on it. --star-for <username> (repeatable) stars it
+ * for that user too — e.g. the instance's shared "demo" login — by adding
+ * them to the dashboard's favorites as the pushing user. --grant-roles adds every widget's app
  * authority (M_chapwidget…) to each user role that can open the Dashboard
  * app, so non-admin users see the widgets too; without it they get a 404
- * for each plugin even on a dashboard shared with them. Both are additive
- * and safe to rerun. Neither applies to --pull.
+ * for each plugin even on a dashboard shared with them. All are additive
+ * and safe to rerun. None applies to --pull.
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { parseDashboardFlag } from './lib/args.mjs'
+import { parseDashboardFlag, parseStarForFlags } from './lib/args.mjs'
 import {
     DEFAULT_DASHBOARD,
     autoAddWidgets,
@@ -57,11 +59,15 @@ const seedFileName = path.basename(seedPath)
 const widgetsDir = path.join(repoRoot, 'widgets')
 
 let dashboardName = null
+let starForUsernames
 let restArgs
 try {
-    ;({ name: dashboardName, rest: restArgs } = parseDashboardFlag(
+    let afterDashboard
+    ;({ name: dashboardName, rest: afterDashboard } = parseDashboardFlag(
         process.argv.slice(2)
     ))
+    ;({ usernames: starForUsernames, rest: restArgs } =
+        parseStarForFlags(afterDashboard))
 } catch (error) {
     console.error(`seed: ${error.message}`)
     process.exit(1)
@@ -69,9 +75,15 @@ try {
 const pullMode = restArgs.includes('--pull')
 const star = restArgs.includes('--star')
 const grantRoles = restArgs.includes('--grant-roles')
-if (pullMode && (dashboardName !== null || star || grantRoles)) {
+if (
+    pullMode &&
+    (dashboardName !== null ||
+        star ||
+        starForUsernames.length > 0 ||
+        grantRoles)
+) {
     console.error(
-        'seed: --pull only takes a target — --dashboard, --star and --grant-roles apply to push'
+        'seed: --pull only takes a target — --dashboard, --star, --star-for and --grant-roles apply to push'
     )
     process.exit(1)
 }
@@ -202,6 +214,32 @@ const starDashboard = async (dashboardId) => {
     }
 }
 
+// Favorites are a set of user ids on the dashboard itself, and the
+// /favorite endpoint only stars for the caller — so to star for another user
+// we JSON-Patch their id in, skipping users who already have it.
+const starDashboardFor = async (dashboardId, usernames) => {
+    const { favorites = [] } = await apiJson(
+        `dashboards/${dashboardId}?fields=favorites`
+    )
+    for (const name of usernames) {
+        const data = await apiJson(
+            `users.json?filter=username:eq:${encodeURIComponent(name)}&fields=id&paging=false`
+        )
+        const userId = data.users?.[0]?.id
+        if (!userId) {
+            throw new Error(`--star-for: no user "${name}" on ${url}`)
+        }
+        if (!favorites.includes(userId)) {
+            await apiJson(`dashboards/${dashboardId}`, {
+                method: 'PATCH',
+                contentType: 'application/json-patch+json',
+                body: [{ op: 'add', path: '/favorites/-', value: userId }],
+            })
+        }
+        console.log(`▸ Starred dashboard for ${name}`)
+    }
+}
+
 // JSON Patch appends to the role's authorities without rewriting the rest
 // of the role, so nothing else about it can be clobbered.
 const grantWidgetAuthorities = async (widgets) => {
@@ -271,11 +309,14 @@ const push = async () => {
         await apiJson('dashboards', { method: 'POST', body: payload })
         console.log(`▸ Created dashboard "${seed.dashboard.name}" on ${url}`)
     }
-    if (star) {
+    if (star || starForUsernames.length > 0) {
         const dashboardId =
             existingId ?? (await findDashboardId(seed.dashboard.code))
-        await starDashboard(dashboardId)
-        console.log(`▸ Starred "${seed.dashboard.name}" for ${username}`)
+        if (star) {
+            await starDashboard(dashboardId)
+            console.log(`▸ Starred "${seed.dashboard.name}" for ${username}`)
+        }
+        await starDashboardFor(dashboardId, starForUsernames)
     }
     if (grantRoles) {
         await grantWidgetAuthorities(seed.items.map((item) => item.widget))

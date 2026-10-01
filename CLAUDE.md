@@ -37,7 +37,7 @@ pnpm deploy:demo  [name…]           # build + install on $DHIS2_DEMO_URL ($D2_
 pnpm seed:local | pnpm seed:demo    # push dashboard.seed.json → seed-owned "CHAP Widgets" dashboard (layout + item configs); auto-appends new plugins
 pnpm seed:pull [local|demo|url]     # pull the live "CHAP Widgets" dashboard back into dashboard.seed.json
 # --dashboard <name> on deploy:* or seed:* creates/overwrites a personal copy of the seed dashboard named <name> (deterministic ids — reruns update in place); seed file + seed-owned dashboard untouched
-# --star stars the pushed dashboard for the deploy user; --grant-roles adds the M_chapwidget… app authorities to every Dashboard-app role (non-admins get a 404 per plugin without them)
+# --star stars the pushed dashboard for the deploy user; --star-for <user> (repeatable) stars it for another user too (CI uses `demo`); --grant-roles adds the M_chapwidget… app authorities to every Dashboard-app role (non-admins get a 404 per plugin without them)
 pnpm regen-api [openapi-url]        # regenerate packages/shared/src/chap-api (default http://localhost:8000/openapi.json)
 ```
 
@@ -48,7 +48,7 @@ Widgets" one, which stays a local-instance thing (repo variable
 `DHIS2_DEMO_URL` + secrets `DHIS2_DEMO_USERNAME`/`DHIS2_DEMO_PASSWORD`;
 skipped with a notice until those are set).
 `nightly-demo.yml` runs
-`pnpm deploy:demo --dashboard "CHAP Plugins" --star --grant-roles` at 02:15
+`pnpm deploy:demo --dashboard "CHAP Plugins" --star --star-for demo --grant-roles` at 02:15
 UTC every night, with a 04:15 UTC backup slot because GitHub sometimes drops scheduled runs (same variable/secret set, also runnable from the Actions
 tab): the demo instance resets nightly, so this reinstalls every plugin,
 recreates the "CHAP Plugins" copy of the seed dashboard, stars it for the

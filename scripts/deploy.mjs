@@ -15,14 +15,14 @@
  * smoke test failed, so failures are re-checked against /api/apps.
  * Pass --dashboard <name> to additionally create/overwrite a personal copy
  * of the seed dashboard named <name> (all widgets, seed layout + configs)
- * after a fully successful deploy — see scripts/seed.mjs. --star and
- * --grant-roles are passed through to that seed step.
+ * after a fully successful deploy — see scripts/seed.mjs. --star,
+ * --star-for <user> and --grant-roles are passed through to that seed step.
  */
 import { execFileSync } from 'node:child_process'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { fetchInstalledAppKeys } from './lib/apps.mjs'
-import { parseDashboardFlag } from './lib/args.mjs'
+import { parseDashboardFlag, parseStarForFlags } from './lib/args.mjs'
 import { widgetAppKey } from './lib/seed-core.mjs'
 import { resolveTarget } from './lib/targets.mjs'
 import { discoverWidgets } from './lib/widgets.mjs'
@@ -34,19 +34,24 @@ const repoRoot = path.resolve(
 const widgetsDir = path.join(repoRoot, 'widgets')
 
 let dashboardName = null
+let starForUsernames
 let restArgs
 try {
-    ;({ name: dashboardName, rest: restArgs } = parseDashboardFlag(
+    let afterDashboard
+    ;({ name: dashboardName, rest: afterDashboard } = parseDashboardFlag(
         process.argv.slice(2)
     ))
+    ;({ usernames: starForUsernames, rest: restArgs } =
+        parseStarForFlags(afterDashboard))
 } catch (error) {
     console.error(`deploy: ${error.message}`)
     process.exit(1)
 }
 const skipBuild = restArgs.includes('--no-build')
-const seedFlags = restArgs.filter(
-    (arg) => arg === '--star' || arg === '--grant-roles'
-)
+const seedFlags = [
+    ...restArgs.filter((arg) => arg === '--star' || arg === '--grant-roles'),
+    ...starForUsernames.map((name) => `--star-for=${name}`),
+]
 if (seedFlags.length > 0 && dashboardName === null) {
     console.error(`deploy: ${seedFlags.join(' ')} needs --dashboard <name>`)
     process.exit(1)
@@ -56,7 +61,7 @@ const [target, ...requestedWidgets] = positional
 
 if (!target) {
     console.error(
-        'Usage: node scripts/deploy.mjs <local|demo|url> [widget…] [--no-build] [--dashboard <name> [--star] [--grant-roles]]'
+        'Usage: node scripts/deploy.mjs <local|demo|url> [widget…] [--no-build] [--dashboard <name> [--star] [--star-for <user>…] [--grant-roles]]'
     )
     process.exit(1)
 }

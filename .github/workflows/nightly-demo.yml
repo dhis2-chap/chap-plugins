@@ -31,7 +31,7 @@ jobs:
                   DHIS2_DEMO_URL: ${{ vars.DHIS2_DEMO_URL }}
                   D2_USERNAME: ${{ secrets.DHIS2_DEMO_USERNAME }}
                   D2_PASSWORD: ${{ secrets.DHIS2_DEMO_PASSWORD }}
-              run: pnpm deploy:demo --dashboard "CHAP Plugins" --star --grant-roles
+              run: pnpm deploy:demo --dashboard "CHAP Plugins" --star --star-for demo --grant-roles
             - name: Nightly demo deploy skipped
               if: vars.DHIS2_DEMO_URL == ''
               run: |

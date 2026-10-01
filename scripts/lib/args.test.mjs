@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { parseDashboardFlag } from './args.mjs'
+import { parseDashboardFlag, parseStarForFlags } from './args.mjs'
 
 test('parseDashboardFlag returns null name when the flag is absent', () => {
     assert.deepEqual(parseDashboardFlag(['local', '--no-build']), {
@@ -35,5 +35,37 @@ test('parseDashboardFlag rejects a missing value', () => {
     assert.throws(
         () => parseDashboardFlag(['--dashboard=']),
         /--dashboard requires a name/
+    )
+})
+
+test('parseStarForFlags returns no usernames when the flag is absent', () => {
+    assert.deepEqual(parseStarForFlags(['demo', '--star']), {
+        usernames: [],
+        rest: ['demo', '--star'],
+    })
+})
+
+test('parseStarForFlags collects repeated flags in both forms, deduped', () => {
+    assert.deepEqual(
+        parseStarForFlags([
+            'demo',
+            '--star-for',
+            'demo',
+            '--grant-roles',
+            '--star-for=guest',
+            '--star-for=demo',
+        ]),
+        { usernames: ['demo', 'guest'], rest: ['demo', '--grant-roles'] }
+    )
+})
+
+test('parseStarForFlags rejects a missing username', () => {
+    assert.throws(
+        () => parseStarForFlags(['--star-for', '--star']),
+        /--star-for requires a username/
+    )
+    assert.throws(
+        () => parseStarForFlags(['--star-for=']),
+        /--star-for requires a username/
     )
 })
