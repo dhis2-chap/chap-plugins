@@ -42,8 +42,9 @@ pnpm regen-api [openapi-url]        # regenerate packages/shared/src/chap-api (d
 ```
 
 CI (`.github/workflows/ci.yml`) runs `pnpm verify` on PRs; pushes to `main`
-additionally deploy every plugin to the demo instance and then run
-`pnpm seed:demo` to refresh the "CHAP Widgets" dashboard there (repo variable
+additionally run the same deploy as the nightly job below, so the demo only
+ever carries the "CHAP Plugins" dashboard — never the seed-owned "CHAP
+Widgets" one, which stays a local-instance thing (repo variable
 `DHIS2_DEMO_URL` + secrets `DHIS2_DEMO_USERNAME`/`DHIS2_DEMO_PASSWORD`;
 skipped with a notice until those are set).
 `nightly-demo.yml` runs

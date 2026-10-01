@@ -37,7 +37,7 @@ create/update a ready-made "CHAP Widgets" dashboard with every plugin already
 laid out and configured. To change its layout, arrange it on the real
 dashboard, run `pnpm seed:pull` to capture that back into
 `dashboard.seed.json`, then commit and push — the next CI run reproduces it
-on the demo instance.
+as the "CHAP Plugins" dashboard on the demo instance.
 
 Want your own copy instead of the shared one? Add `--dashboard <name>`:
 `pnpm deploy:local --dashboard edvin` deploys every plugin and then
@@ -78,7 +78,8 @@ its contract.
 
 - **Local**: `pnpm deploy:local [name…]` → `http://localhost:8090`.
 - **Demo**: every push to `main` builds and deploys **all** plugins to the
-  demo instance via GitHub Actions. Set the repository variable
+  demo instance via GitHub Actions and refreshes the "CHAP Plugins"
+  dashboard there (the only dashboard CI seeds on the demo). Set the repository variable
   `DHIS2_DEMO_URL` and the secrets `DHIS2_DEMO_USERNAME` /
   `DHIS2_DEMO_PASSWORD` to enable it; until then the deploy step skips with
   a notice. Manually: `DHIS2_DEMO_URL=… D2_USERNAME=… D2_PASSWORD=… pnpm deploy:demo`.

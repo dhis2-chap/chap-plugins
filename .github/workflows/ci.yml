@@ -37,20 +37,13 @@ jobs:
                   node-version: 22
                   cache: pnpm
             - run: pnpm install --frozen-lockfile
-            - name: Deploy all plugins to the demo instance
+            - name: Deploy all plugins and refresh the CHAP Plugins dashboard
               if: vars.DHIS2_DEMO_URL != ''
               env:
                   DHIS2_DEMO_URL: ${{ vars.DHIS2_DEMO_URL }}
                   D2_USERNAME: ${{ secrets.DHIS2_DEMO_USERNAME }}
                   D2_PASSWORD: ${{ secrets.DHIS2_DEMO_PASSWORD }}
-              run: pnpm deploy:demo
-            - name: Seed the demo dashboard
-              if: vars.DHIS2_DEMO_URL != ''
-              env:
-                  DHIS2_DEMO_URL: ${{ vars.DHIS2_DEMO_URL }}
-                  D2_USERNAME: ${{ secrets.DHIS2_DEMO_USERNAME }}
-                  D2_PASSWORD: ${{ secrets.DHIS2_DEMO_PASSWORD }}
-              run: pnpm seed:demo
+              run: pnpm deploy:demo --dashboard "CHAP Plugins" --star --grant-roles
             - name: Demo deploy skipped
               if: vars.DHIS2_DEMO_URL == ''
               run: |
