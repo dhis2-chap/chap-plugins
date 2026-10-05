@@ -47,13 +47,15 @@ ever carries the "CHAP Plugins" dashboard — never the seed-owned "CHAP
 Widgets" one, which stays a local-instance thing (repo variable
 `DHIS2_DEMO_URL` + secrets `DHIS2_DEMO_USERNAME`/`DHIS2_DEMO_PASSWORD`;
 skipped with a notice until those are set).
-`nightly-demo.yml` runs
-`pnpm deploy:demo --dashboard "CHAP Plugins" --star --star-for demo --grant-roles` at 02:15
-UTC every night, with a 04:15 UTC backup slot because GitHub sometimes drops scheduled runs (same variable/secret set, also runnable from the Actions
-tab): the demo instance resets nightly, so this reinstalls every plugin,
-recreates the "CHAP Plugins" copy of the seed dashboard, stars it for the
-deploy user, and grants the plugin app authorities to every role that can
-open the Dashboard app.
+`nightly-demo.yml` checks the demo every 30 minutes and, once the nightly
+reset (~01:34 UTC) has wiped the "CHAP Plugins" dashboard, runs
+`pnpm deploy:demo --dashboard "CHAP Plugins" --star --star-for demo --grant-roles`
+(same variable/secret set; a manual run from the Actions tab always deploys).
+No fixed slot: GitHub starts scheduled runs hours late or drops them. The
+deploy reinstalls every plugin, recreates the "CHAP Plugins" copy of the seed
+dashboard, stars it for the deploy user and the shared `demo` login, and
+grants the plugin app authorities to every role that can open the Dashboard
+app.
 
 ## The rules
 

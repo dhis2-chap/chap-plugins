@@ -2,20 +2,65 @@ name: Nightly demo dashboard
 
 on:
     schedule:
-        # 04:15 in Oslo summer time (03:15 in winter) — cron runs in UTC.
-        # GitHub drops scheduled runs now and then (it skipped the first
-        # night entirely), so a second slot re-runs it two hours later; the
-        # deploy is idempotent, so a double run just reinstalls the same thing.
-        - cron: '15 2 * * *'
-        - cron: '15 4 * * *'
-    workflow_dispatch:
+        # The demo instance's database resets nightly (~01:34 UTC), wiping the
+        # plugins and the CHAP Plugins dashboard. GitHub starts scheduled runs
+        # hours late (the 02:15 slot ran at ~08:30 UTC) and sometimes not at
+        # all, so instead of one fixed slot this checks every 30 minutes and
+        # only deploys once the dashboard is gone. A check alone takes seconds.
+        - cron: '*/30 * * * *'
+    workflow_dispatch: # always deploys
 
 concurrency:
     group: deploy-demo
     cancel-in-progress: false
 
 jobs:
+    check:
+        runs-on: ubuntu-latest
+        outputs:
+            needed: ${{ steps.check.outputs.needed }}
+        steps:
+            - name: Does the demo still have the CHAP Plugins dashboard?
+              id: check
+              env:
+                  DHIS2_DEMO_URL: ${{ vars.DHIS2_DEMO_URL }}
+                  D2_USERNAME: ${{ secrets.DHIS2_DEMO_USERNAME }}
+                  D2_PASSWORD: ${{ secrets.DHIS2_DEMO_PASSWORD }}
+                  EVENT: ${{ github.event_name }}
+              run: |
+                  if [ -z "$DHIS2_DEMO_URL" ]; then
+                      echo "::notice::Nightly demo deploy skipped — set the repository variable DHIS2_DEMO_URL and the secrets DHIS2_DEMO_USERNAME / DHIS2_DEMO_PASSWORD to enable it."
+                      echo "needed=false" >> "$GITHUB_OUTPUT"
+                      exit 0
+                  fi
+                  if [ "$EVENT" = "workflow_dispatch" ]; then
+                      echo "needed=true" >> "$GITHUB_OUTPUT"
+                      exit 0
+                  fi
+                  # Code of the --dashboard "CHAP Plugins" copy (see deriveNamedSeed).
+                  status=$(curl -s -o body.json -w '%{http_code}' -u "$D2_USERNAME:$D2_PASSWORD" \
+                      "$DHIS2_DEMO_URL/api/dashboards.json?filter=code:eq:CHAP_WIDGETS_CHAP_PLUGINS&fields=id" || true)
+                  if [ "$status" = "401" ]; then
+                      echo "::error::The demo instance rejected the deploy credentials (401)."
+                      exit 1
+                  fi
+                  if [ "$status" != "200" ]; then
+                      # Mid-reset or briefly down: the next slot tries again.
+                      echo "::notice::Demo instance answered ${status:-nothing} — retrying next slot."
+                      echo "needed=false" >> "$GITHUB_OUTPUT"
+                      exit 0
+                  fi
+                  if grep -q '"id"' body.json; then
+                      echo "CHAP Plugins dashboard present — nothing to do."
+                      echo "needed=false" >> "$GITHUB_OUTPUT"
+                  else
+                      echo "CHAP Plugins dashboard missing — the instance was reset, redeploying."
+                      echo "needed=true" >> "$GITHUB_OUTPUT"
+                  fi
+
     deploy:
+        needs: check
+        if: needs.check.outputs.needed == 'true'
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
@@ -26,13 +71,8 @@ jobs:
                   cache: pnpm
             - run: pnpm install --frozen-lockfile
             - name: Deploy all plugins and refresh the CHAP Plugins dashboard
-              if: vars.DHIS2_DEMO_URL != ''
               env:
                   DHIS2_DEMO_URL: ${{ vars.DHIS2_DEMO_URL }}
                   D2_USERNAME: ${{ secrets.DHIS2_DEMO_USERNAME }}
                   D2_PASSWORD: ${{ secrets.DHIS2_DEMO_PASSWORD }}
               run: pnpm deploy:demo --dashboard "CHAP Plugins" --star --star-for demo --grant-roles
-            - name: Nightly demo deploy skipped
-              if: vars.DHIS2_DEMO_URL == ''
-              run: |
-                  echo "::notice::Nightly demo deploy skipped — set the repository variable DHIS2_DEMO_URL and the secrets DHIS2_DEMO_USERNAME / DHIS2_DEMO_PASSWORD to enable it."
