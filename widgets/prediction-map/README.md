@@ -1,4 +1,4 @@
-# CHAP · Prediction Map
+# Chap · Prediction Map
 
 <!--
 PLUGIN CONTRACT — keep this section accurate; it is what humans and AI agents
@@ -7,7 +7,7 @@ read to understand the plugin without reading the code.
 
 ## What it shows
 
-A MapLibre GL choropleth of a CHAP prediction: every org unit in the
+A MapLibre GL choropleth of a Chap prediction: every org unit in the
 prediction colored by its median predicted case count, with a period stepper
 to flip through the forecasted periods and a hover popup showing the median
 and 80% prediction interval. By default it follows the **latest** prediction
@@ -38,14 +38,14 @@ instead of being presented as an isolated cluster. The ancestor's DHIS2
 `predictionId` is `PredictionSelectionSchema` from `@chap-widgets/shared`, the
 same field every prediction-backed plugin uses.
 
-## CHAP endpoints used
+## Chap endpoints used
 
 - `GET /v1/crud/predictions` — prediction dropdown in the config form + resolving `predictionId` in the view
 - `GET /v1/analytics/prediction-entry/{predictionId}?quantiles=0.1,0.25,0.5,0.75,0.9` — forecast quantiles for all org units
 
 Org unit geometry comes from the DHIS2 metadata API
 (`organisationUnits?fields=id,displayName,geometry,ancestors[…]` via
-`useOrgUnitGeometryContext` in `@chap-widgets/shared`), not from CHAP.
+`useOrgUnitGeometryContext` in `@chap-widgets/shared`), not from Chap.
 
 ## Files
 

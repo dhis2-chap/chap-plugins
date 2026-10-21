@@ -128,7 +128,7 @@ export const useOrgUnitGeometryContext = (orgUnitIds: string[]) =>
 
 /**
  * Fetches GeoJSON features (id, name, geometry) for org unit ids (as used in
- * CHAP entries) via the DHIS2 metadata API. Org units without geometry are
+ * Chap entries) via the DHIS2 metadata API. Org units without geometry are
  * omitted from the result — callers decide how to surface the gap.
  */
 export const useOrgUnitGeometries = (orgUnitIds: string[]) => {

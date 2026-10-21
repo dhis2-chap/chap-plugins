@@ -56,7 +56,7 @@ export const ConfigForm = ({
         return (
             <ErrorState title={i18n.t('Could not load evaluations')}>
                 {i18n.t(
-                    'Fetching the backtest list from the CHAP backend failed.'
+                    'Fetching the backtest list from the Chap backend failed.'
                 )}
             </ErrorState>
         )

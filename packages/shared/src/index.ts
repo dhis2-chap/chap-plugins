@@ -1,8 +1,8 @@
-// Generated CHAP OpenAPI client (regenerate with `pnpm regen-api`)
+// Generated Chap OpenAPI client (regenerate with `pnpm regen-api`)
 export * from './chap-api'
 export { enableQueue, disableQueue, getQueue } from './chap-api/core/request'
 
-// CHAP route plumbing
+// Chap route plumbing
 export { ChapProvider } from './chap/ChapProvider'
 export { ChapGuard, useChapSystemInfo } from './chap/ChapGuard'
 export { useResolvedPredictionId } from './chap/predictions'

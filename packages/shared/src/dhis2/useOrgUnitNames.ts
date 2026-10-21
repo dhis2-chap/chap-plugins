@@ -10,7 +10,7 @@ type OrgUnitResponse = {
 const CHUNK_SIZE = 100
 
 /**
- * Resolves org unit ids (as used in CHAP entries) to display names via the
+ * Resolves org unit ids (as used in Chap entries) to display names via the
  * DHIS2 metadata API. Returns a Map<id, displayName>; ids that don't resolve
  * simply stay absent — callers fall back to the raw id.
  */

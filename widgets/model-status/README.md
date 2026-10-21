@@ -1,4 +1,4 @@
-# CHAP · Model Status
+# Chap · Model Status
 
 <!--
 PLUGIN CONTRACT — keep this section accurate; it is what humans and AI agents
@@ -7,7 +7,7 @@ read to understand the plugin without reading the code.
 
 ## What it shows
 
-An operational overview of the CHAP backend: the most recent jobs with their
+An operational overview of the Chap backend: the most recent jobs with their
 status (auto-refreshing every 30s), plus the running chap-core version in the
 footer. Useful on a demo/ops dashboard to see the system is alive.
 
@@ -24,7 +24,7 @@ on the instance.
 | `title`    | `string?` | dashboard item title override    |
 | `jobLimit` | `number`  | how many recent jobs to list (8) |
 
-## CHAP endpoints used
+## Chap endpoints used
 
 - `GET /v1/jobs` — recent jobs with status
 - `GET /system/info` — chap-core version footer

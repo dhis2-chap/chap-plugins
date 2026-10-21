@@ -2,7 +2,7 @@
 const config = {
     type: 'app',
     name: 'chap-widget-outbreak-alerts',
-    title: 'CHAP · Outbreak Alerts',
+    title: 'Chap · Outbreak Alerts',
     minDHIS2Version: '2.40',
 
     // Makes the plugin entrypoint available as a Dashboard item

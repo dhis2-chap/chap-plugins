@@ -2,7 +2,7 @@
 const config = {
     type: 'app',
     name: 'chap-widget-outbreak-map',
-    title: 'CHAP · Outbreak Map',
+    title: 'Chap · Outbreak Map',
     minDHIS2Version: '2.40',
 
     // Makes the plugin entrypoint available as a Dashboard item

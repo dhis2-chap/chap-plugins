@@ -42,7 +42,7 @@ const formatTime = (isoTimestamp: string | null) => {
 }
 
 /**
- * Operational overview of the CHAP backend: recent jobs with status and the
+ * Operational overview of the Chap backend: recent jobs with status and the
  * chap-core version.
  */
 export const WidgetView = ({ config }: { config: Config }) => {
@@ -59,7 +59,7 @@ export const WidgetView = ({ config }: { config: Config }) => {
     if (jobsQuery.isError) {
         return (
             <ErrorState title={i18n.t('Could not load jobs')}>
-                {i18n.t('Fetching the job list from the CHAP backend failed.')}
+                {i18n.t('Fetching the job list from the Chap backend failed.')}
             </ErrorState>
         )
     }

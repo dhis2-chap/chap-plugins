@@ -19,7 +19,7 @@ export type ThresholdParamsFieldsProps = {
 
 /**
  * The strategy picker and its parameter fields, shared by every widget that
- * compares a forecast against CHAP's endemic threshold. The parent holds the
+ * compares a forecast against Chap's endemic threshold. The parent holds the
  * parsed params — it gets `undefined` while the form is invalid and disables
  * saving on that — while the raw text of each field stays in here.
  *

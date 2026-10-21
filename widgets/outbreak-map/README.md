@@ -1,4 +1,4 @@
-# CHAP · Outbreak Map
+# Chap · Outbreak Map
 
 <!--
 PLUGIN CONTRACT — keep this section accurate; it is what humans and AI agents
@@ -7,7 +7,7 @@ read to understand the plugin without reading the code.
 
 ## What it shows
 
-A MapLibre GL map of a CHAP prediction's org units colored by how far their
+A MapLibre GL map of a Chap prediction's org units colored by how far their
 forecast sits **above the endemic threshold**: red where the predicted median
 crosses the threshold, deepening with the multiple by which it does
 (1–1.25×, 1.25–1.5×, 1.5–2×, 2–3×, ≥3×). Amber marks an org unit whose median
@@ -22,7 +22,7 @@ data, so the legend means the same thing on every period, prediction and
 dashboard. Because each org unit is compared against its own threshold, a
 low-endemic district 3× over reads as urgently as a high-endemic one.
 
-Thresholds come from CHAP's threshold endpoint using the **same strategies and
+Thresholds come from Chap's threshold endpoint using the **same strategies and
 defaults as the modeling app** (seasonal mean + 2σ by default, or the WHO
 endemic-channel percentile band), computed from the prediction's own dataset
 history for exactly the periods and org units on the map. An org unit with too
@@ -64,7 +64,7 @@ upper is read from the params the response echoes back, never from the request.
 `predictionId` is `PredictionSelectionSchema` from `@chap-widgets/shared`, the
 same field every prediction-backed plugin uses.
 
-## CHAP endpoints used
+## Chap endpoints used
 
 - `GET /v1/crud/predictions` — prediction dropdown in the config form + resolving `predictionId` in the view
 - `GET /v1/analytics/prediction-entry/{predictionId}?quantiles=0.1,0.25,0.5,0.75,0.9` — forecast quantiles for all org units
@@ -72,7 +72,7 @@ same field every prediction-backed plugin uses.
 
 Org unit geometry comes from the DHIS2 metadata API
 (`organisationUnits?fields=id,displayName,geometry,ancestors[…]` via
-`useOrgUnitGeometryContext` in `@chap-widgets/shared`), not from CHAP.
+`useOrgUnitGeometryContext` in `@chap-widgets/shared`), not from Chap.
 
 ## Files
 

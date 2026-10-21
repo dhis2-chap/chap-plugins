@@ -1,4 +1,4 @@
-# CHAP · Prediction Chart
+# Chap · Prediction Chart
 
 <!--
 PLUGIN CONTRACT — keep this section accurate; it is what humans and AI agents
@@ -7,11 +7,11 @@ read to understand the plugin without reading the code.
 
 ## What it shows
 
-A prediction fan chart for one org unit: recent observed cases, the CHAP
+A prediction fan chart for one org unit: recent observed cases, the Chap
 model's median forecast, and its 50%/80% prediction interval bands. The
 dashboard equivalent of the modeling app's prediction result view.
 
-With `predictionId: 'latest'` the plugin renders whichever prediction CHAP ran
+With `predictionId: 'latest'` the plugin renders whichever prediction Chap ran
 most recently and re-checks every five minutes, so a dashboard left open picks
 up new runs on its own. Pin it to an id to hold it on one prediction.
 
@@ -29,7 +29,7 @@ up new runs on its own. Pin it to an id to hold it on one prediction.
 `predictionId` is `PredictionSelectionSchema` from `@chap-widgets/shared`, the
 same field every prediction-backed plugin uses.
 
-## CHAP endpoints used
+## Chap endpoints used
 
 - `GET /v1/crud/predictions` — prediction dropdown, and resolving `predictionId` to the run's name + dataset
 - `GET /v1/analytics/prediction-entry/{predictionId}?quantiles=0.1,0.25,0.5,0.75,0.9` — forecast quantiles

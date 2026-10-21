@@ -47,7 +47,7 @@ export const getThresholdLineRoles = (
 /**
  * Index a threshold response for lookup by org unit and period.
  *
- * Periods are keyed on their canonical id, since CHAP can spell the same week
+ * Periods are keyed on their canonical id, since Chap can spell the same week
  * differently in a prediction and in a threshold response. Entries whose line
  * could not be computed — an org unit with no usable history — are left out,
  * so a missing key means "no threshold", never "threshold of zero".

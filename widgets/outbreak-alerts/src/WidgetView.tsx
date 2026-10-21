@@ -52,7 +52,7 @@ const AlertTag = ({ status }: { status: OrgUnitAlert['status'] }) => {
 /**
  * Ranks a prediction's org units by how far their forecast rises above their
  * own endemic threshold — median over the threshold is an alert, 90th
- * percentile over it is "possible". Thresholds come from CHAP's threshold
+ * percentile over it is "possible". Thresholds come from Chap's threshold
  * endpoint using the modeling app's strategies, so the table agrees with the
  * outbreak map and with the modeling app's prediction charts.
  */
@@ -138,7 +138,7 @@ export const WidgetView = ({ config }: { config: Config }) => {
         return (
             <ErrorState title={i18n.t('Could not load predictions')}>
                 {i18n.t(
-                    'Fetching the prediction list from the CHAP backend failed.'
+                    'Fetching the prediction list from the Chap backend failed.'
                 )}
             </ErrorState>
         )
@@ -157,7 +157,7 @@ export const WidgetView = ({ config }: { config: Config }) => {
         return (
             <ErrorState title={i18n.t('Could not load prediction')}>
                 {i18n.t(
-                    'Fetching the prediction from the CHAP backend failed. It may have been deleted.'
+                    'Fetching the prediction from the Chap backend failed. It may have been deleted.'
                 )}
             </ErrorState>
         )
@@ -166,7 +166,7 @@ export const WidgetView = ({ config }: { config: Config }) => {
         return (
             <ErrorState title={i18n.t('Could not compute thresholds')}>
                 {i18n.t(
-                    'CHAP could not compute endemic thresholds for this prediction’s dataset. It needs historical disease cases to compare against.'
+                    'Chap could not compute endemic thresholds for this prediction’s dataset. It needs historical disease cases to compare against.'
                 )}
             </ErrorState>
         )

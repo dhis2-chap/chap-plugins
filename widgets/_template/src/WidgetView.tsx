@@ -6,7 +6,7 @@ import styles from './WidgetView.module.css'
 
 /**
  * Shown while the dashboard is in view mode. Replace this with the widget's
- * actual visualization — the template just proves the CHAP plumbing works.
+ * actual visualization — the template just proves the Chap plumbing works.
  */
 export const WidgetView = ({ config }: { config: Config }) => {
     const systemInfo = useChapSystemInfo()

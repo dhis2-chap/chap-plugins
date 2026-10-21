@@ -59,7 +59,7 @@ cpSync(templateDir, targetDir, {
 const REPLACEMENTS = [
     ['chap-widget-template', `chap-widget-${name}`],
     ['@chap-widgets/template', `@chap-widgets/${name}`],
-    ['CHAP · Template', `CHAP · ${titleName}`],
+    ['Chap · Template', `Chap · ${titleName}`],
     ['Template widget', `${titleName} widget`],
     ['deploy:local template', `deploy:local ${name}`],
 ]

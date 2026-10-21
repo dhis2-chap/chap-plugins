@@ -45,7 +45,7 @@ export const ConfigForm = ({
         return (
             <ErrorState title={i18n.t('Could not load predictions')}>
                 {i18n.t(
-                    'Fetching the prediction list from the CHAP backend failed.'
+                    'Fetching the prediction list from the Chap backend failed.'
                 )}
             </ErrorState>
         )

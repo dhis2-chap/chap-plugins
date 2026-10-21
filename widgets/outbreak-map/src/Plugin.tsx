@@ -23,7 +23,7 @@ const Plugin = (props: DashboardPluginProps) => (
                 <WidgetShell
                     plugin={props}
                     schema={ConfigSchema}
-                    defaultTitle={i18n.t('CHAP · Outbreak Map')}
+                    defaultTitle={i18n.t('Chap · Outbreak Map')}
                     getItemTitle={(config) => config.title}
                     ConfigForm={ConfigForm}
                     View={WidgetView}

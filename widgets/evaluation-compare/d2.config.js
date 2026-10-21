@@ -2,7 +2,7 @@
 const config = {
     type: 'app',
     name: 'chap-widget-evaluation-compare',
-    title: 'CHAP · Evaluation Compare',
+    title: 'Chap · Evaluation Compare',
     minDHIS2Version: '2.40',
 
     // Makes the plugin entrypoint available as a Dashboard item

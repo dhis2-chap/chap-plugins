@@ -165,7 +165,7 @@ export const WidgetView = ({ config }: { config: Config }) => {
         return (
             <ErrorState title={i18n.t('Could not load evaluation')}>
                 {i18n.t(
-                    'Fetching the backtest from the CHAP backend failed. It may have been deleted.'
+                    'Fetching the backtest from the Chap backend failed. It may have been deleted.'
                 )}
             </ErrorState>
         )

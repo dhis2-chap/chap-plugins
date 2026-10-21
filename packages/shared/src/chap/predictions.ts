@@ -12,10 +12,10 @@ const PREDICTIONS_STALE_TIME = 5 * 60 * 1000
 /**
  * Resolve a widget's {@link PredictionSelection} to the prediction it should
  * render. While following the latest run the list is refetched periodically,
- * so a dashboard left open picks up new CHAP runs on its own.
+ * so a dashboard left open picks up new Chap runs on its own.
  *
  * Every selection resolves through the list, a pinned id included, so that a
- * prediction deleted in CHAP is reported as missing rather than requested and
+ * prediction deleted in Chap is reported as missing rather than requested and
  * failed. That costs nothing extra: `['chap', 'predictions']` is one query key
  * shared by every widget on the dashboard.
  */

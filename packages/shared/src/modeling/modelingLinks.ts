@@ -1,5 +1,5 @@
 /**
- * Deep links from a widget into the CHAP modeling app.
+ * Deep links from a widget into the Chap modeling app.
  *
  * The modeling app is a hash router, so a link is its launch URL plus a
  * `#/path?query` fragment. Only destinations a widget can address *exactly*
@@ -24,7 +24,7 @@
 export const MODELING_APP_HUB_ID = 'a29851f9-82a7-4ecd-8b2c-58e0f220bc75'
 
 export type EvaluationCompareLinkParams = {
-    /** CHAP backtest to open as the comparison's base evaluation */
+    /** Chap backtest to open as the comparison's base evaluation */
     backtestId: number
     /** Org unit to preselect */
     orgUnitId: string

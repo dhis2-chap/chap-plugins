@@ -7,7 +7,7 @@ import { enableQueue, getQueue } from '../chap-api/core/request'
 import styles from '../plugin/states.module.css'
 
 /**
- * Points the generated CHAP client at this instance's Route API and installs
+ * Points the generated Chap client at this instance's Route API and installs
  * a retry policy for the route's 503-under-concurrency behavior. Port of the
  * modeling app's SetChapUrl. Must wrap anything that calls a *Service class,
  * and must itself be inside a QueryClientProvider.

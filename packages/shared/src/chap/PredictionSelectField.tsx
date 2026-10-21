@@ -9,7 +9,7 @@ import {
 } from './predictionSelection'
 
 export type PredictionSelectFieldProps = {
-    /** The prediction list as CHAP returned it; ordering is applied here */
+    /** The prediction list as Chap returned it; ordering is applied here */
     predictions: PredictionInfo[]
     value: PredictionSelection
     onChange: (selection: PredictionSelection) => void
@@ -37,7 +37,7 @@ export const PredictionSelectField = ({
         <SingleSelectField
             label={i18n.t('Prediction')}
             helpText={i18n.t(
-                '“Latest prediction” follows new CHAP runs automatically; pinning keeps this widget on one prediction.'
+                '“Latest prediction” follows new Chap runs automatically; pinning keeps this widget on one prediction.'
             )}
             selected={isResolvable ? String(value) : undefined}
             onChange={({ selected }) =>

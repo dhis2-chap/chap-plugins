@@ -1,7 +1,7 @@
 # chap-plugins
 
-A playground of DHIS2 **dashboard plugins** for [CHAP](https://github.com/dhis2-chap):
-small dashboard plugins that put CHAP predictions, evaluations, and system
+A playground of DHIS2 **dashboard plugins** for [Chap](https://github.com/dhis2-chap):
+small dashboard plugins that put Chap predictions, evaluations, and system
 status directly on DHIS2 dashboards.
 
 Each plugin under `widgets/` is a full DHIS2 app with a `DASHBOARD` plugin
@@ -17,7 +17,7 @@ individually or in bulk.
 | `prediction-chart`   | Forecast fan chart (median + 50%/80% intervals + actuals) for one org unit |
 | `evaluation-compare` | Backtest: predicted intervals vs observed actuals for one split            |
 | `outbreak-alerts`    | Org units ranked by peak forecast, flagged against a threshold             |
-| `model-status`       | Recent CHAP jobs, configured models, chap-core version                     |
+| `model-status`       | Recent Chap jobs, configured models, chap-core version                     |
 
 ## Quick start
 
@@ -29,15 +29,15 @@ pnpm deploy:local model-status   # …or just one
 ```
 
 Then open the Dashboard app, edit a dashboard, and add items — the plugins
-appear in the item picker as **CHAP · <Name>**. Configure the item while the
+appear in the item picker as **Chap · <Name>**. Configure the item while the
 dashboard is in edit mode; the config is stored per dashboard item.
 
 Or skip the manual setup: `pnpm seed:local` pushes `dashboard.seed.json` to
-create/update a ready-made "CHAP Widgets" dashboard with every plugin already
+create/update a ready-made "Chap Widgets" dashboard with every plugin already
 laid out and configured. To change its layout, arrange it on the real
 dashboard, run `pnpm seed:pull` to capture that back into
 `dashboard.seed.json`, then commit and push — the next CI run reproduces it
-as the "CHAP Plugins" dashboard on the demo instance.
+as the "Chap Plugins" dashboard on the demo instance.
 
 Want your own copy instead of the shared one? Add `--dashboard <name>`:
 `pnpm deploy:local --dashboard edvin` deploys every plugin and then
@@ -59,7 +59,7 @@ autosaves the arrangement — plus each plugin's live config — back into
 `dashboard.seed.json`.
 
 Plugins fetch data from chap-core through the instance's DHIS2 route
-(`/api/routes/chap/run`), which the CHAP Modeling App's settings create. If
+(`/api/routes/chap/run`), which the Chap Modeling App's settings create. If
 the route or backend is missing, plugins show a friendly notice instead.
 
 ## Creating a new plugin
@@ -78,12 +78,12 @@ its contract.
 
 - **Local**: `pnpm deploy:local [name…]` → `http://localhost:8090`.
 - **Demo**: every push to `main` builds and deploys **all** plugins to the
-  demo instance via GitHub Actions and refreshes the "CHAP Plugins"
+  demo instance via GitHub Actions and refreshes the "Chap Plugins"
   dashboard there (the only dashboard CI seeds on the demo). Set the repository variable
   `DHIS2_DEMO_URL` and the secrets `DHIS2_DEMO_USERNAME` /
   `DHIS2_DEMO_PASSWORD` to enable it; until then the deploy step skips with
   a notice. Manually: `DHIS2_DEMO_URL=… D2_USERNAME=… D2_PASSWORD=… pnpm deploy:demo`.
 - **Nightly demo**: the demo instance resets every night, so
   `nightly-demo.yml` checks every 30 minutes and, once the reset has wiped it, redeploys and recreates the
-  "CHAP Plugins" dashboard, starred for the deploy user and `demo`, with the plugin authorities granted to every
+  "Chap Plugins" dashboard, starred for the deploy user and `demo`, with the plugin authorities granted to every
   Dashboard-app role.

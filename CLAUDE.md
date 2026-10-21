@@ -1,6 +1,6 @@
 # chap-plugins
 
-Playground monorepo of DHIS2 **dashboard plugins** that visualize CHAP
+Playground monorepo of DHIS2 **dashboard plugins** that visualize Chap
 predictions. Code identifiers still say "widget" (`widgets/`, `@chap-widgets/*`,
 `WidgetShell`); prose says "plugin". Every plugin is an identical-structured
 DHIS2 app that builds to its own self-contained zip and appears as a dashboard
@@ -22,7 +22,7 @@ widgets/<name>/         One dashboard plugin each; see the PLUGIN CONTRACT in it
 apps/board/             Dev-only board harness: every plugin on one react-grid-layout page; drag/resize + live configs autosave into dashboard.seed.json (never built/deployed)
 scripts/                new-widget.mjs, deploy.mjs, seed.mjs, regen-api.mjs
   lib/                  Shared script logic — target resolution, plugin discovery, seed-core — unit-tested (pnpm test)
-dashboard.seed.json     Source of truth for the seed-owned "CHAP Widgets" dashboard (layout + per-item config, stable item UIDs)
+dashboard.seed.json     Source of truth for the seed-owned "Chap Widgets" dashboard (layout + per-item config, stable item UIDs)
 ```
 
 ## Commands
@@ -34,8 +34,8 @@ pnpm verify                         # typecheck + lint + test + build everything
 pnpm --filter @chap-widgets/<name> start   # dev server for one plugin
 pnpm deploy:local [name…]           # build + install on http://localhost:8090 (admin/district)
 pnpm deploy:demo  [name…]           # build + install on $DHIS2_DEMO_URL ($D2_USERNAME/$D2_PASSWORD)
-pnpm seed:local | pnpm seed:demo    # push dashboard.seed.json → seed-owned "CHAP Widgets" dashboard (layout + item configs); auto-appends new plugins
-pnpm seed:pull [local|demo|url]     # pull the live "CHAP Widgets" dashboard back into dashboard.seed.json
+pnpm seed:local | pnpm seed:demo    # push dashboard.seed.json → seed-owned "Chap Widgets" dashboard (layout + item configs); auto-appends new plugins
+pnpm seed:pull [local|demo|url]     # pull the live "Chap Widgets" dashboard back into dashboard.seed.json
 # --dashboard <name> on deploy:* or seed:* creates/overwrites a personal copy of the seed dashboard named <name> (deterministic ids — reruns update in place); seed file + seed-owned dashboard untouched
 # --star stars the pushed dashboard for the deploy user; --star-for <user> (repeatable) stars it for another user too (CI uses `demo`); --grant-roles adds the M_chapwidget… app authorities to every Dashboard-app role (non-admins get a 404 per plugin without them)
 pnpm regen-api [openapi-url]        # regenerate packages/shared/src/chap-api (default http://localhost:8000/openapi.json)
@@ -43,16 +43,16 @@ pnpm regen-api [openapi-url]        # regenerate packages/shared/src/chap-api (d
 
 CI (`.github/workflows/ci.yml`) runs `pnpm verify` on PRs; pushes to `main`
 additionally run the same deploy as the nightly job below, so the demo only
-ever carries the "CHAP Plugins" dashboard — never the seed-owned "CHAP
+ever carries the "Chap Plugins" dashboard — never the seed-owned "Chap
 Widgets" one, which stays a local-instance thing (repo variable
 `DHIS2_DEMO_URL` + secrets `DHIS2_DEMO_USERNAME`/`DHIS2_DEMO_PASSWORD`;
 skipped with a notice until those are set).
 `nightly-demo.yml` checks the demo every 30 minutes and, once the nightly
-reset (~01:34 UTC) has wiped the "CHAP Plugins" dashboard, runs
-`pnpm deploy:demo --dashboard "CHAP Plugins" --star --star-for demo --grant-roles`
+reset (~01:34 UTC) has wiped the "Chap Plugins" dashboard, runs
+`pnpm deploy:demo --dashboard "Chap Plugins" --star --star-for demo --grant-roles`
 (same variable/secret set; a manual run from the Actions tab always deploys).
 No fixed slot: GitHub starts scheduled runs hours late or drops them. The
-deploy reinstalls every plugin, recreates the "CHAP Plugins" copy of the seed
+deploy reinstalls every plugin, recreates the "Chap Plugins" copy of the seed
 dashboard, stars it for the deploy user and the shared `demo` login, and
 grants the plugin app authorities to every role that can open the Dashboard
 app.
@@ -68,8 +68,8 @@ app.
 2. **Never edit `packages/shared/src/chap-api/`** — it's generated. To update
    it, run `pnpm regen-api` against a running chap-core.
 3. **Keep each plugin's README PLUGIN CONTRACT accurate** (what it shows,
-   config schema, CHAP endpoints used). It's the spec of record.
-4. **Data comes from the CHAP route API** (`{baseUrl}/api/routes/chap/run`)
+   config schema, Chap endpoints used). It's the spec of record.
+4. **Data comes from the Chap route API** (`{baseUrl}/api/routes/chap/run`)
    via the generated `*Service` classes inside TanStack Query. `ChapProvider`
    must wrap anything that calls them (the template already does);
    `ChapGuard` shows a friendly card when the route/backend is missing —
@@ -81,7 +81,7 @@ app.
    `packages/shared`, run `pnpm verify` (it builds every plugin, including
    the template).
 7. **`dashboard.seed.json` owns exactly one dashboard**: `pnpm seed:local` /
-   `pnpm seed:demo` overwrite the seed-owned "CHAP Widgets" dashboard (its
+   `pnpm seed:demo` overwrite the seed-owned "Chap Widgets" dashboard (its
    layout and every item's datastore config) and nothing else — the "Test"
    dashboard (`OHOPHFFLD2N`) is never touched and stays a manual sandbox. To
    change the layout: arrange/configure it on the real dashboard and
@@ -97,8 +97,8 @@ The local DHIS2 instance is `http://localhost:8090` (admin/district), with
 the chap route + chap-core expected to be running behind it. The "Test"
 dashboard (id `OHOPHFFLD2N`) is where plugins are tried out: deploy with
 `pnpm deploy:local <name>`, then add the plugin as a dashboard item (they
-show up in the item picker as "CHAP · <Name>"), configure it in dashboard
-edit mode, save, and check view mode. `pnpm seed:local` sets up the "CHAP
+show up in the item picker as "Chap · <Name>"), configure it in dashboard
+edit mode, save, and check view mode. `pnpm seed:local` sets up the "Chap
 Widgets" dashboard (all plugins, laid out and configured) in one command.
 
 `pnpm --filter @chap-widgets/<name> start` serves the plugin standalone with
@@ -106,11 +106,11 @@ a mode-toggle harness — good for iterating on forms/views without deploying,
 but final verification happens on a real dashboard.
 
 `pnpm board` serves every plugin from source on one
-react-grid-layout page (item ids and configs shared with the real "CHAP
+react-grid-layout page (item ids and configs shared with the real "Chap
 Widgets" dashboard); drags/resizes and a "Sync seed" button write
 dashboard.seed.json directly — the fastest layout/config loop, no deploy.
 
-## DHIS2/CHAP specifics worth knowing
+## DHIS2/Chap specifics worth knowing
 
 - Dashboard plugins receive `DashboardPluginProps` (`dashboardItemId`,
   `dashboardMode: 'view' | 'edit' | 'print'`, `setDashboardItemDetails`, …).

@@ -20,7 +20,7 @@ import {
 } from './seed-core.mjs'
 
 const validSeed = () => ({
-    dashboard: { name: 'CHAP Widgets', code: 'CHAP_WIDGETS' },
+    dashboard: { name: 'Chap Widgets', code: 'CHAP_WIDGETS' },
     items: [
         {
             id: 'a1234567890',
@@ -165,7 +165,7 @@ test('mergePulledDashboard converts live items, keeps code, adopts live name', (
     const { seed, skipped } = mergePulledDashboard({
         code: 'CHAP_WIDGETS',
         dashboard: {
-            name: 'CHAP Widgets (renamed)',
+            name: 'Chap Widgets (renamed)',
             dashboardItems: [
                 {
                     id: 'c1234567890',
@@ -200,7 +200,7 @@ test('mergePulledDashboard converts live items, keeps code, adopts live name', (
         configs: { d1234567890: { version: 1, jobLimit: 10 } },
         knownWidgets: ['outbreak-alerts', 'model-status'],
     })
-    assert.equal(seed.dashboard.name, 'CHAP Widgets (renamed)')
+    assert.equal(seed.dashboard.name, 'Chap Widgets (renamed)')
     assert.equal(seed.dashboard.code, 'CHAP_WIDGETS')
     assert.deepEqual(skipped, ['VISUALIZATION', 'line-listing'])
     assert.deepEqual(seed.items, [

@@ -5,7 +5,7 @@ import { PassiveState } from '../plugin/states'
 /**
  * What a widget shows when {@link useResolvedPredictionId} resolved to
  * nothing. Which of the two situations it is depends on the selection: a
- * widget following the latest run is waiting for CHAP's first prediction,
+ * widget following the latest run is waiting for Chap's first prediction,
  * while a pinned one is pointing at a prediction that has been deleted and
  * needs the user to pick again.
  */
@@ -16,7 +16,7 @@ export const MissingPredictionState = ({
 }) =>
     followsLatest ? (
         <PassiveState title={i18n.t('No predictions yet')}>
-            {i18n.t('No predictions have been run on the CHAP backend yet.')}
+            {i18n.t('No predictions have been run on the Chap backend yet.')}
         </PassiveState>
     ) : (
         <PassiveState title={i18n.t('Prediction not found')}>

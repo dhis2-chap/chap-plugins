@@ -1,7 +1,7 @@
 {
     "name": "@chap-widgets/shared",
     "version": "1.0.0",
-    "description": "Shared building blocks for CHAP dashboard widgets: CHAP API client, plugin shell, config persistence, charts, maps",
+    "description": "Shared building blocks for Chap dashboard widgets: Chap API client, plugin shell, config persistence, charts, maps",
     "license": "BSD-3-Clause",
     "private": true,
     "main": "src/index.ts",

@@ -1,5 +1,5 @@
 /**
- * Minimal DHIS2 period-id helpers. CHAP returns consistent period ids per
+ * Minimal DHIS2 period-id helpers. Chap returns consistent period ids per
  * dataset (all monthly `YYYYMM` or all weekly `YYYYWn`), so lexicographic /
  * numeric-aware sorting is sufficient here — no full period engine needed.
  */
@@ -24,7 +24,7 @@ const stripLeadingZeroes = (value: string): string =>
 
 /**
  * Normalize a period id so ids that name the same period compare equal.
- * CHAP and DHIS2 can spell the same week `2024W3` or `2024W03`, and matching
+ * Chap and DHIS2 can spell the same week `2024W3` or `2024W03`, and matching
  * predictions against per-period thresholds on the raw ids silently loses
  * every row. Monthly and unrecognized ids are returned trimmed and unchanged.
  */

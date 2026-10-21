@@ -2,7 +2,7 @@
 const config = {
     type: 'app',
     name: 'chap-widget-prediction-chart',
-    title: 'CHAP · Prediction Chart',
+    title: 'Chap · Prediction Chart',
     minDHIS2Version: '2.40',
 
     // Makes the plugin entrypoint available as a Dashboard item

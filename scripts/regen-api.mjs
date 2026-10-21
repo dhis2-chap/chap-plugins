@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Regenerate the CHAP OpenAPI client in packages/shared/src/chap-api from a
+ * Regenerate the Chap OpenAPI client in packages/shared/src/chap-api from a
  * running chap-core server's OpenAPI spec.
  *
  * Usage: pnpm regen-api [spec-url]      (default: http://localhost:8000/openapi.json)

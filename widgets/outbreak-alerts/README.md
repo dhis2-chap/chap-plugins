@@ -1,4 +1,4 @@
-# CHAP · Outbreak Alerts
+# Chap · Outbreak Alerts
 
 <!--
 PLUGIN CONTRACT — keep this section accurate; it is what humans and AI agents
@@ -7,7 +7,7 @@ read to understand the plugin without reading the code.
 
 ## What it shows
 
-A ranked table of the org units in a CHAP prediction, ordered by how far their
+A ranked table of the org units in a Chap prediction, ordered by how far their
 forecast rises above **their own endemic threshold**: red when the predicted
 median crosses it, "possible" when only the 90th percentile does. Each row is
 the worst period of the forecast window for that org unit, with the predicted
@@ -19,13 +19,13 @@ per-org-unit threshold — a small district 3× over its baseline outranks a big
 one that is merely busy. An org unit with too little history gets no threshold
 and says so, rather than being silently reported as safe.
 
-Thresholds come from CHAP's threshold endpoint using the **same strategies and
+Thresholds come from Chap's threshold endpoint using the **same strategies and
 defaults as the modeling app** (seasonal mean + 2σ by default, or the WHO
 endemic-channel percentile band), computed from the prediction's own dataset
 history — so the table agrees with the outbreak map and with the modeling app's
 prediction charts.
 
-With `predictionId: 'latest'` the plugin ranks whichever prediction CHAP ran
+With `predictionId: 'latest'` the plugin ranks whichever prediction Chap ran
 most recently and re-checks every five minutes, so a dashboard left open picks
 up new runs on its own. Pin it to an id to hold it on one prediction.
 
@@ -53,7 +53,7 @@ outbreak-map and mirroring the modeling app's `ThresholdParams`:
 Only the **upper** line is the alert threshold; the lower one is kept so the
 params match the modeling app's endemic-channel band one-for-one.
 
-## CHAP endpoints used
+## Chap endpoints used
 
 - `GET /v1/crud/predictions` — prediction dropdown, latest-prediction resolution, and the prediction's dataset
 - `GET /v1/analytics/prediction-entry/{predictionId}?quantiles=0.5,0.9` — forecasts for **all** org units

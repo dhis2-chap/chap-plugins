@@ -9,7 +9,7 @@ export const ConfigSchema = z.object({
     version: z.literal(1),
     widget: z.literal('chap-widget-evaluation-compare'),
     title: z.string().optional(),
-    /** CHAP backtest (evaluation) to plot */
+    /** Chap backtest (evaluation) to plot */
     backtestId: z.number(),
     /** Org unit (as used in the evaluation entries) to plot */
     orgUnitId: z.string(),

@@ -2,7 +2,7 @@
 const config = {
     type: 'app',
     name: 'chap-widget-model-status',
-    title: 'CHAP · Model Status',
+    title: 'Chap · Model Status',
     minDHIS2Version: '2.40',
 
     // Makes the plugin entrypoint available as a Dashboard item

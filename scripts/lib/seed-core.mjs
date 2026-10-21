@@ -13,7 +13,7 @@ import { createHash, randomBytes } from 'node:crypto'
  */
 export const GRID_COLUMNS = 60
 export const DEFAULT_ITEM_SIZE = { w: 20, h: 20 }
-export const DEFAULT_DASHBOARD = { name: 'CHAP Widgets', code: 'CHAP_WIDGETS' }
+export const DEFAULT_DASHBOARD = { name: 'Chap Widgets', code: 'CHAP_WIDGETS' }
 
 export const UID_RE = /^[A-Za-z][A-Za-z0-9]{10}$/
 

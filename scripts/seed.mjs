@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Seed the "CHAP Widgets" dashboard on a DHIS2 instance from
+ * Seed the "Chap Widgets" dashboard on a DHIS2 instance from
  * dashboard.seed.json — or pull the live dashboard back into the file.
  * Spec: docs/superpowers/specs/2026-09-01-dashboard-seed-design.md
  *

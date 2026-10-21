@@ -54,7 +54,7 @@ test('an unparseable timestamp orders by id instead of dropping the entry', () =
     assert.deepEqual(ids(sorted), [6, 4])
 })
 
-test('getLatestPrediction returns undefined when CHAP has no predictions', () => {
+test('getLatestPrediction returns undefined when Chap has no predictions', () => {
     assert.equal(getLatestPrediction([]), undefined)
 })
 

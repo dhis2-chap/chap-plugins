@@ -1,5 +1,5 @@
 /**
- * The endemic-threshold strategies CHAP's `/v1/analytics/thresholds` endpoint
+ * The endemic-threshold strategies Chap's `/v1/analytics/thresholds` endpoint
  * offers, as a config schema plus the form parsing every widget that lets a
  * user pick one needs. Mirrors the modeling app's own `ThresholdParams`, so
  * identical values produce identical thresholds there and here — which is the

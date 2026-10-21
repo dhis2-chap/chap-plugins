@@ -236,7 +236,7 @@ export const WidgetView = ({ config }: { config: Config }) => {
         return (
             <ErrorState title={i18n.t('Could not load predictions')}>
                 {i18n.t(
-                    'Fetching the prediction list from the CHAP backend failed.'
+                    'Fetching the prediction list from the Chap backend failed.'
                 )}
             </ErrorState>
         )
@@ -258,7 +258,7 @@ export const WidgetView = ({ config }: { config: Config }) => {
         return (
             <ErrorState title={i18n.t('Could not load prediction')}>
                 {i18n.t(
-                    'Fetching the prediction from the CHAP backend failed. It may have been deleted.'
+                    'Fetching the prediction from the Chap backend failed. It may have been deleted.'
                 )}
             </ErrorState>
         )

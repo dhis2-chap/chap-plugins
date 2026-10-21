@@ -1,4 +1,4 @@
-# CHAP · Evaluation Compare
+# Chap · Evaluation Compare
 
 <!--
 PLUGIN CONTRACT — keep this section accurate; it is what humans and AI agents
@@ -37,12 +37,12 @@ appears only when the modeling app is installed on the instance.
 | `version`     | `1`       | config schema version                              |
 | `widget`      | literal   | plugin discriminator                               |
 | `title`       | `string?` | dashboard item title override                      |
-| `backtestId`  | `number`  | CHAP backtest (evaluation) to plot                 |
+| `backtestId`  | `number`  | Chap backtest (evaluation) to plot                 |
 | `orgUnitId`   | `string`  | org unit to plot                                   |
 | `orgUnitName` | `string?` | display-name snapshot taken at config time         |
 | `splitPeriod` | `string?` | split the slider starts on; unset = the last split |
 
-## CHAP endpoints used
+## Chap endpoints used
 
 - `GET /v1/crud/backtests` — backtest dropdown in the config form
 - `GET /v1/crud/backtests/{backtestId}` — backtest metadata (name, splitPeriods)

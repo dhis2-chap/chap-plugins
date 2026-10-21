@@ -15,7 +15,7 @@ type ChapRoute = {
     disabled?: boolean
 }
 
-/** The DHIS2 route the CHAP backend is reached through (created by the Modeling App's settings). */
+/** The DHIS2 route the Chap backend is reached through (created by the Modeling App's settings). */
 const CHAP_ROUTE_CODE = 'chap'
 
 const useChapRoute = () => {
@@ -56,13 +56,13 @@ export const useChapSystemInfo = ({
 const NoChapBackend = ({ reason }: { reason: 'no-route' | 'unreachable' }) => (
     <div className={styles.centeredState}>
         <div className={styles.noticeWrap}>
-            <NoticeBox warning title={i18n.t('CHAP backend not available')}>
+            <NoticeBox warning title={i18n.t('Chap backend not available')}>
                 {reason === 'no-route'
                     ? i18n.t(
-                          'This DHIS2 instance has no "chap" route configured. Open the CHAP Modeling App settings to connect a running chap-core server, then reload this dashboard.'
+                          'This DHIS2 instance has no "chap" route configured. Open the Chap Modeling App settings to connect a running chap-core server, then reload this dashboard.'
                       )
                     : i18n.t(
-                          'The "chap" route exists but the CHAP backend did not respond. Check that chap-core is running and reachable from the DHIS2 server.'
+                          'The "chap" route exists but the Chap backend did not respond. Check that chap-core is running and reachable from the DHIS2 server.'
                       )}
             </NoticeBox>
         </div>
@@ -70,7 +70,7 @@ const NoChapBackend = ({ reason }: { reason: 'no-route' | 'unreachable' }) => (
 )
 
 /**
- * Gates children on a working CHAP backend: the DHIS2 "chap" route must exist
+ * Gates children on a working Chap backend: the DHIS2 "chap" route must exist
  * and chap-core must answer /system/info through it. Otherwise renders a
  * friendly card instead of letting every request in the widget fail.
  */

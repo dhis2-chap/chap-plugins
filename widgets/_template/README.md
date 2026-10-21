@@ -1,4 +1,4 @@
-# CHAP · Template
+# Chap · Template
 
 <!--
 PLUGIN CONTRACT — keep this section accurate; it is what humans and AI agents
@@ -18,7 +18,7 @@ visualization and the decision it supports.
 | `widget`  | literal   | plugin discriminator          |
 | `title`   | `string?` | dashboard item title override |
 
-## CHAP endpoints used
+## Chap endpoints used
 
 - `GET /system/info` (via `useChapSystemInfo`) — chap-core version shown in the view
 

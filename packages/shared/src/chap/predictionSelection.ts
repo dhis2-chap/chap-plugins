@@ -8,7 +8,7 @@
 import { z } from 'zod'
 import type { PredictionInfo } from '../chap-api'
 
-/** Config value meaning "whichever prediction CHAP ran most recently" */
+/** Config value meaning "whichever prediction Chap ran most recently" */
 export const LATEST_PREDICTION = 'latest'
 
 /**
@@ -19,7 +19,7 @@ export const LATEST_PREDICTION = 'latest'
  * absence means "latest". Following the newest run is a choice the user made,
  * so it gets written down — and a config that merely *omits* the key is then
  * a config that failed to write, which renders as "not configured" instead of
- * silently following whatever CHAP happened to run last.
+ * silently following whatever Chap happened to run last.
  */
 export const PredictionSelectionSchema = z.union([
     z.literal(LATEST_PREDICTION),
@@ -31,7 +31,7 @@ export type PredictionSelection = z.infer<typeof PredictionSelectionSchema>
 /**
  * Orders two predictions newest-first by `created`, with the id as tiebreak —
  * and as the whole comparison when a timestamp is missing or unparseable, so
- * the answer never depends on the order CHAP happened to return them in.
+ * the answer never depends on the order Chap happened to return them in.
  */
 const comparePredictionRecency = (
     first: PredictionInfo,
@@ -58,7 +58,7 @@ export const getLatestPrediction = (
 
 /**
  * Resolve a selection against the prediction list. Returns `undefined` when
- * CHAP has no predictions at all, or when a pinned one has been deleted —
+ * Chap has no predictions at all, or when a pinned one has been deleted —
  * callers tell those apart by the selection they passed in.
  */
 export const resolvePrediction = (

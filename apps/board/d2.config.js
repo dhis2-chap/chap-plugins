@@ -2,7 +2,7 @@
 const config = {
     type: 'app',
     name: 'chap-board',
-    title: 'CHAP · Board',
+    title: 'Chap · Board',
     minDHIS2Version: '2.40',
 
     entryPoints: {

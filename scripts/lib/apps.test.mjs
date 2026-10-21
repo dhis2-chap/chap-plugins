@@ -13,15 +13,15 @@ test('parseAppKeys reads a plain array of apps', () => {
         parseAppKeys([
             {
                 key: 'chap-widget-prediction-map',
-                name: 'CHAP · Prediction Map',
+                name: 'Chap · Prediction Map',
             },
-            { key: 'chap-widget-model-status', name: 'CHAP · Model Status' },
+            { key: 'chap-widget-model-status', name: 'Chap · Model Status' },
         ]),
         new Set([
             'chap-widget-prediction-map',
-            'CHAP · Prediction Map',
+            'Chap · Prediction Map',
             'chap-widget-model-status',
-            'CHAP · Model Status',
+            'Chap · Model Status',
         ])
     )
 })

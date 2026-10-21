@@ -1,7 +1,7 @@
 {
     "name": "chap-widgets",
     "version": "1.0.0",
-    "description": "Playground monorepo of DHIS2 dashboard plugins (widgets) for CHAP",
+    "description": "Playground monorepo of DHIS2 dashboard plugins (widgets) for Chap",
     "license": "BSD-3-Clause",
     "private": true,
     "packageManager": "pnpm@10.29.3",
